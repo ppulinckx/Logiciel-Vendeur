@@ -59,6 +59,7 @@ angular.forEach(solutions, function(solution) {
 });
 
 var packs = [
+	{products : ['chaudiere_condensation', 'domotique'], label:"Chaudière à condensation & Domotique", price:{unit:11700}, img:"condensation_domotique", video:false}, 
 	{products : ['chaudiere_condensation', 'hydrofuge_toiture'], label:"Chaudière à condensation & Hydrofuge toiture", price:{unit:14585}, img:"condensation_hydrofuge", video:false}, 
 	{products : ['hydrofuge_toiture', 'iso_comble'], label:"Hydrofuge toiture & Isolation des combles", price:{unit:14585}, img:"iso_comble_hydrofuge", video:false}, 
 	{products : ['ballon_thermodynamique', 'hydrofuge_toiture'], label:"Ballon thermodynamique & Hydrofuge toiture", img:"ballon_thermo_hydrofuge", price:{unit:14585}, video:false}, 
