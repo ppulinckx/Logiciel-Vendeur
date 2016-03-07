@@ -1,0 +1,157 @@
+<div ng-controller="Store as ctrl" id="consommation" ng-init="ctrl.load(); annual = ctrl.data.annual; monthly = ctrl.data.monthly; decennial = ctrl.data.decennial;" ng-keyup="ctrl.updateBill();">
+	<form class="embedded">
+
+		<div class="panel panel-default" style="background:#eee;">
+ 		<div class="panel-body">
+
+		<div class="form-group">
+			<div class="col-sm-12"><h1>Consommation</h1></div>
+		</div>
+		<div class="form-group">
+			<label class="col-sm-4 control-label">Numéro de client : </label>
+			<div class="col-sm-8"><input class="form-control" type="text" ng-model="ctrl.data.customer.clientnumber" placeholder="Numéro client" maxlength="20" type="text"required></div>
+		</div>
+		<div class="form-group">
+			<label class="col-sm-4 control-label">Surface chauffée :</label>
+			<div class="col-sm-8">
+				<div class="input-group">
+					<input class="form-control" type="number" ng-model="ctrl.data.home.surface" placeholder="Surface chauffée" maxlength="8" type="text"required>
+					<div class="input-group-addon">m²</div>
+				</div>
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="col-sm-4 control-label">Consommation energétique annuelle :</label>
+			<div class="col-sm-8">
+				<div class="input-group">
+					<input class="form-control"  type="number" ng-model="ctrl.data.home.consommation" placeholder="Consommation" maxlength="8" type="text" required>
+					<div class="input-group-addon">kW</div>
+				</div>
+			</div>
+		</div>
+		<div class="form-group" ng-if="ctrl.data.energy.label=='fioul'">
+			<div class="col-sm-12"><h1>Consommation de fioul</h1></div>
+			<label class="col-sm-4 control-label">Nombre de litres :</label>
+			<div class="col-sm-8">
+				<div class="input-group">
+					<input class="form-control" type="number" ng-model="ctrl.data.fioul.quantity" placeholder="Litres de fioul consommés" maxlength="8" type="text">
+					<div class="input-group-addon">L</div>
+				</div>
+			</div>
+			<label class="col-sm-4 control-label">Prix au litre : </label>
+			<div class="col-sm-8">
+				<div class="input-group">
+					<input class="form-control" type="number" ng-model="ctrl.data.fioul.quantity" placeholder="Litres de fioul consommés" maxlength="8" type="text">
+					<div class="input-group-addon">€/L</div>
+				</div>
+			</div>
+		</div>
+	
+		</div>
+		</div>
+
+		<div class="row">
+		  <div class="col-xs-6 col-sm-3"></div>
+		  <div class="col-xs-6 col-sm-3"><center><h1>Cette année</h1></center></div>
+		  <div class="col-xs-6 col-sm-3"><center><h1>Mensuel</h1></center></div>
+		  <div class="col-xs-6 col-sm-3"><center><h1>Sur 10 ans</h1></center></div>
+		</div>
+
+<div class="panel panel-default">
+	<div class="panel-body" style="background:#B2E6FF;">
+		<div class="col-xs-6 col-sm-3"><center><img ng-src="img/edf-bleu-ciel.png" width="100%"></center></div>
+		<div class="col-xs-6 col-sm-3">
+			<div class="input-group">	
+				<input type="number" class="form-control" ng-change="ctrl.updateConso('annual')" ng-model="annual.electricite" placeholder="Annuel" maxlength="8">
+				<div class="input-group-addon">€</div>
+			</div>
+		</div>
+		<div class="col-xs-6 col-sm-3">
+			<div class="input-group">
+				<input type="number" class="form-control" ng-change="ctrl.updateConso('monthly')" ng-model="monthly.electricite" placeholder="Mensuel" maxlength="8">
+				<div class="input-group-addon">€</div>
+			</div>
+		</div>
+		<div class="col-xs-6 col-sm-3">
+			<div class="input-group">
+				<input type="number" class="form-control" ng-model="decennial.electricite" disabled>
+				<div class="input-group-addon">€</div>
+			</div>
+		</div>
+	</div>
+</div>
+		
+		<div class="panel panel-default" ng-if="ctrl.data.energy.label=='gaz'">
+		  <div class="panel-body" style="background:#EAD6FF;">
+				  <div class="col-xs-6 col-sm-3"><center><img src="img/Engie_Logo.png"  width="100%"></center></div>
+				  <div class="col-xs-6 col-sm-3">
+					<div class="input-group">				
+						<input type="number" class="form-control" ng-change="ctrl.updateConso('annual')" ng-model="annual.gaz" placeholder="Annuel" maxlength="8">
+						<div class="input-group-addon">€</div>
+					</div>
+					</div>
+				  <div class="col-xs-6 col-sm-3">
+					<div class="input-group">
+						<input type="number" class="form-control" ng-change="ctrl.updateConso('monthly')" ng-model="monthly.gaz" placeholder="Mensuel" maxlength="8">
+						<div class="input-group-addon">€</div>
+					</div>
+				</div>
+				  <div class="col-xs-6 col-sm-3"><div class="input-group">
+						<input type="number" class="form-control" ng-model="decennial.gaz" disabled>
+						<div class="input-group-addon">€</div>
+					</div></div>
+				</div>
+		</div>
+
+		<div class="panel panel-default" ng-if="ctrl.data.energy.label=='fioul'">
+		  <div class="panel-body" style="background:#99C2FF;">
+			  <div class="col-xs-6 col-sm-3"><center><h1>Fioul</h1></center></div>
+			  <div class="col-xs-6 col-sm-3"><input class="form-control" ng-model="ctrl.data.annual.fioul" placeholder="Annuel"  maxlength="8" type="text"></div>
+			  <div class="col-xs-6 col-sm-3"><center>{{ctrl.data.annual.fioul / 12 | price:0}} €</center></div>
+			  <div class="col-xs-6 col-sm-3"><div class="input-group">
+					<input type="number" class="form-control" ng-model="decennial.fioul" disabled>
+					<div class="input-group-addon">€</div>
+				</div></div>
+			</div>
+		</div>
+
+		<div class="panel panel-default">
+		  <div class="panel-body" style="background:#ccc;">
+				  <div class="col-xs-6 col-sm-3"><center><h1>Total</h1></center></div>
+				  <div class="col-xs-6 col-sm-3"><div class="input-group">
+						<input type="number" class="form-control" ng-model="annual.total" disabled>
+						<div class="input-group-addon">€</div>
+					</div></div>
+				  <div class="col-xs-6 col-sm-3"><div class="input-group">
+						<input type="number" class="form-control" ng-model="annual.total / 10" disabled>
+						<div class="input-group-addon">€</div>
+					</div></div>
+				  <div class="col-xs-6 col-sm-3"><div class="input-group">
+						<input type="number" class="form-control" ng-model="decennial.total" disabled>
+						<div class="input-group-addon">€</div>
+					</div></div>
+				</div>
+		</div>
+
+		<section>
+			<a href="#popup_video_augmentation_energie" data-rel="popup" data-position-to="window" data-transition="fade">Video</a>
+			<p>Selon la CRE, une augmentation de 30% des prix de l'électricité entre 2012 et 2017 est prévisible, soit une augmentation de 6% par an.</p>
+			<p>De 2005 à 2011, le gaz a augmenté de 60% soit une augmentation moyenne de 10% par an (sourse CRE).</p>
+			<p>Le prix du fioul est passé de 37 centimes le litre en 2002 à 97 centimes le litre en 2012, soit une augmentation de 162% en 10 ans. 
+				Ceci équivaut à une augmentation moyenne de 16.2% par an (source CLCV).</p>
+			<p>De 2009 à 2013, le prix des granulés de bois a augmenté de 13% soit 2.6% par an (source CFBL). </p>
+		</section>
+
+		<!--STEP 1-->
+		<fieldset class="ui-grid-a">
+			<div class="ui-block-a"><a my-href="ctrl.previousHref('consommation')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+			<div class="ui-block-b">
+				<htmldiv ng-hide="ctrl.step.consommation" content="ctrl.checkFill('consommation')"></htmldiv>
+				<a ng-show="ctrl.step.consommation" my-href="ctrl.nextHref('consommation')" class="ui-btn ui-btn-b ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a>
+			</div>
+		</fieldset>
+
+		{{ctrl.data}}
+
+	</form>
+</div>

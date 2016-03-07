@@ -1,0 +1,18 @@
+AddType text/cache-manifest manifest
+
+#AuthName "Page protegee"
+#AuthType Basic
+#AuthUserFile "/home/conseilh/app/.htpasswd"
+#Require valid-user
+
+Header set Access-Control-Allow-Origin "*"
+
+RewriteEngine On
+RewriteRule ^(css|js)/([\w-]+)\.\d+\.\1$ $1/$2.$1 [L]
+
+<FilesMatch "\.(css|js)$">
+    Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+</FilesMatch>
+
+SetEnv PHP_VER 5_5

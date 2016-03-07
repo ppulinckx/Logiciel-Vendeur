@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <widget xmlns   = "http://www.w3.org/ns/widgets"
+     xmlns:gap   = "http://phonegap.com/ns/1.0"
+     id          = "com.phonegap.example"
+     versionCode = "10" 
+     version     = "1.0.0" >
+
+    <!-- versionCode is optional and Android only -->
+
+	 <preference name="phonegap-version" value="3.6.3" />
+    <name>Conseil Habitation</name>
+    <description>Programme de vente pour la société Conseil Habitation</description>
+    <author email="ppulinckx@live.com">Pulinckx Pierre</author>
+	 <icon src="img/logo_ico.png" />
+
+</widget>

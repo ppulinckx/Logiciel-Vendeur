@@ -1,0 +1,246 @@
+<div id="questionnaire">
+	<section class="embedded">
+	<!-- HABITATION -->
+	<h1>Informations pratiques</h1>
+	<h2>Votre famille</h2>
+	<table style="width:100%">
+		<tr>
+			<td width="50%"><label>Nombre d'enfants</label></td>
+ 			<td width="50%">
+				<select ng-change="store.save()" ng-model="store.data.family.children" required>
+					<option value="">{{store.default.option}}</option>
+					<option ng-repeat="val in [0,1,2,3,4,5,6,7,8]">{{val}}</option>
+				</select>
+ 			</td>	
+ 		</tr>
+		<tr>
+			<td width="50%"><label>Nombre d'adultes</label></td>
+ 			<td width="50%">
+	 			<select ng-change="store.save()" ng-model="store.data.family.adults" required>
+	 				<option value="">{{store.default.option}}</option>
+					<option ng-repeat="val in [1,2]">{{val}}</option>
+				</select>
+			</td>	
+ 		</tr>
+ 	</table>	
+		
+	<h1>Chauffage principale ({{store.data.energy.name}})</h1>
+	<table style="width:100%">
+		<tr>
+			<td width="50%"><label>Quelle est votre installation ? </label></td>
+			<td width="50%">
+				<select ng-change="store.save()" ng-model="store.data.chauffage.installation" required>
+					<option value="">{{store.default.option}}</option>
+					<option ng-if="store.data.energy.label=='gaz'" ng-repeat="product in ['chaudiere_condensation', 'chaudiere_classique', 'convecteur_gaz']" ng-value="{{product}}">
+						{{store.labels[product]}}
+					</option>
+					<option ng-if="store.data.energy.label=='electricite'" ng-repeat="product in ['radiateur_inertie', 'pac_air_air']" ng-value="{{product}}">
+						{{store.labels[product]}}
+					</option>
+					<option ng-if="store.data.energy.label=='fioul'" ng-repeat="product in ['chaudiere_condensation', 'chaudiere_classique', 'convecteur_fioul']" ng-value="{{product}}">
+						{{store.labels[product]}}
+					</option>
+				</select>
+			</td>
+		</tr>
+		<tr ng-if="store.data.chauffage.installation==store.labels['chaudiere_condensation']">
+			<td width="50%"><label>En êtes-vous content ? </label></td>
+			<td width="50%" align="right">
+				<select ng-change="store.save()" ng-model="store.data.chauffage.satisfaction" required>
+					<option value="">{{store.default.option}}</option>
+					<option value="1">Oui</option>
+					<option value="0">Non</option>
+				</select>
+			</td>
+		</tr>
+		<tr ng-if="(store.data.chauffage.installation==store.labels['chaudiere_condensation'] && store.data.chauffage.satisfaction=='0') || store.data.chauffage.installation==store.labels['chaudiere_classique']">
+			<td><label>Est-il possible d'installer une chaudière hybride ? </label></td>
+			<td align="right">
+				<select ng-change="store.save()" ng-model="store.data.chauffage.hybride_possible" required>
+					<option value="">{{store.default.option}}</option>
+					<option value="1">Oui</option>
+					<option value="0">Non</option>
+				</select>
+			</td>
+		</tr>
+		<tr ng-if="(store.data.chauffage.installation==store.labels['chaudiere_condensation'] && store.data.chauffage.satisfaction=='0') || store.data.chauffage.installation==store.labels['chaudiere_classique']">
+			<td><label>Est-il possible d'installer une chaudière pulsatoire ? </label></td>
+			<td align="right">
+				<select ng-change="store.save()" ng-model="store.data.chauffage.pulsatoire_possible" required>
+					<option value="">{{store.default.option}}</option>
+					<option value="1">Oui</option>
+					<option value="0">Non</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td><label>En cas de panne ou de changement, à qui feriez-vous appel ? </label></td>
+			<td align="right">
+				<select ng-change="store.save()" ng-model="store.data.chauffage.installateur" required>
+					<option value="">{{store.default.option}}</option>
+					<option value="1">Ne sais pas</option>
+					<option value="0">Une bonne connaissance</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td><label>Auriez-vous aimé contrôler la température pièce par pièce ? </label></td>
+			<td align="right">
+				<select ng-change="store.save()" ng-model="store.data.chauffage.domotique" required>
+					<option value="">{{store.default.option}}</option>
+					<option value="1">Oui</option>
+					<option value="0">Non</option>
+				</select>
+			</td>
+		</tr>
+	</table>
+
+	<!-- CHAUFFAGE d'APPOINT -->
+	<h1>Chauffage d'appoint</h1>
+	<table style="width:100%">
+		<tr>
+			<td width="50%"><label>Avez-vous un chauffage d'appoint ?</label></td>
+			<td width="50%" align="right">
+				<select ng-change="store.save()" ng-model="store.data.chauffage.appoint" required>
+					<option value="">{{store.default.option}}</option>
+					<option value="0">Oui, Feu à pétrole</option>
+					<option value="0">Oui, Poèle/insert à granulés</option>
+					<option value="0">Oui, Poèle/insert à bois</option>
+					<option value="0">Oui, radiateur électrique</option>
+					<option value="0">Non</option>
+					<option value="1">Non, mais aurait aimé</option>
+				</select>
+			</td>
+		</tr>
+	</table>
+
+	<!-- EAU CHAUDE SANITAIRE -->
+	<h1>Eau chaude sanitaire</h1>
+	<table style="width:100%">
+		<tr>
+			<td width="50%">L'eau chaude est produite par ?</td>
+			<td width="50%">
+				<select ng-change="store.save()" ng-model="store.data.ecs.installation" required>
+					<option value="">{{store.default.option}}</option>
+					<option ng-repeat="product in ['chaudiere_classique', 'cumulus', 'ballon_thermodynamique']" ng-value="{{product}}">{{store.labels[product]}}</option>
+				</select>
+			</td>
+		</tr>
+		<tr ng-if="store.data.ecs.installation==store.labels['cumulus'] || store.data.ecs.installation==store.labels['chaudiere_classique']">
+			<td width="50%">Est-il possible d'installer un ballon thermodynamique ?</td>
+			<td width="50%">
+				<select ng-change="store.save()" ng-model="store.data.ecs.thermodynamique_possible" required>
+					<option value="">{{store.default.option}}</option>
+					<option value="1">Oui</option>
+					<option value="0">Non</option>
+				</select>
+			</td>
+		</tr>
+		<tr ng-if="store.data.ecs.installation==store.labels['chaudiere_classique']">
+			<td width="50%">Est-il possible d'installer un cumulus ?</td>
+			<td width="50%">
+				<select ng-change="store.save()" ng-model="store.data.ecs.cumulus_possible" required>
+					<option value="">{{store.default.option}}</option>
+					<option value="1">Oui</option>
+					<option value="0">Non</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td width="50%">Avez-vous des problèmes de calcaire ?</td>
+			<td width="50%">
+				<select ng-change="store.save()" ng-model="store.data.ecs.probleme_calcaire" required>
+					<option value="">{{store.default.option}}</option>
+					<option value="1">Oui</option>
+					<option value="0">Non</option>
+				</select>
+			</td>
+		</tr>
+	</table>
+
+	<!-- ISOLATION -->
+	<h1>Isolation</h1>
+	<table style="width:100%">
+		<tr>
+			<td width="50%">Façade exposée au nord ?</td>
+			<td width="50%">
+				<select ng-change="store.save()" ng-model="store.data.isolation.facade_nord" required>
+					<option value="">{{store.default.option}}</option>
+					<option value="0">Non</option>
+					<option value="1">Oui</option>
+				</select>
+			</td>
+		</tr>
+		<tr ng-if="store.data.isolation.facade_nord=='1'">
+			<td>Ressentez-vous le froid ?</td>
+			<td>
+				<select ng-change="store.save()" ng-model="store.data.isolation.facade" required>
+					<option value="">{{store.default.option}}</option>
+					<option value="0">Non</option>
+					<option value="1">Oui</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td>Quel est l'état de la porte d'entrée : </td>
+			<td>
+				<select ng-change="store.save()" ng-model="store.data.isolation.porte" required>
+					<option value="">{{store.default.option}}</option>
+					<option value="0">Bon</option>
+					<option value="1">Moyen</option>
+					<option value="1">Mauvais</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td>Avez-vous des fenêtres à changer ?</td>
+			<td>
+				<select ng-change="store.save()" ng-model="store.data.isolation.vitrage" required>
+					<option value="">{{store.default.option}}</option>
+					<option value="0">Non</option>
+					<option value="1">Oui</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td>Quel est l'état de la toiture : </td>
+			<td>
+				<select ng-change="store.save()" ng-model="store.data.isolation.toiture" required>
+					<option value="">{{store.default.option}}</option>
+					<option value="0">Bon</option>
+					<option value="1">Moyen</option>
+					<option value="1">Mauvais</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td>Vos combles sont : </td>
+			<td>
+				<select ng-change="store.save()" ng-model="store.data.isolation.combles" required>
+					<option value="">{{store.default.option}}</option>
+					<option value="0">Pas de combles</option>
+					<option value="1">Aménagées non isolées</option>
+					<option value="0">Aménagées isolées</option>
+					<option value="1">Perdues non isolées</option>
+					<option value="0">Perdues isolées</option>
+				</select>
+			</td>
+		</tr>
+	</table>
+  		
+	<!--STEP 5-->
+	<hr>
+	<fieldset class="ui-grid-a">
+		<div class="ui-block-a">
+			<a my-href="store.previousHref('questionnaire')" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-corner-all">Retour</a>
+		</div>
+		<div class="ui-block-b" ng-show="step.questionnaire">
+			<a my-href="store.nextHref('questionnaire')" ng-click="store.compute()" class="ui-btn ui-icon-arrow-r ui-btn-icon-right ui-corner-all ui-btn-b">Continuer</a>
+		</div>
+		<div class="ui-block-b" ng-hide="step.questionnaire">
+			<htmldiv content="store.checkFill('questionnaire')"></htmldiv>
+		</div>
+	</fieldset>
+	</section>
+</div>
+

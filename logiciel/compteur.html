@@ -1,0 +1,42 @@
+<div id="compteur" ng-keyup="store.save()">
+	<section class="embedded">
+	<table id="viewlist" ng-if="store.data.energy.id==2">
+		<thead>
+			<td colspan="4"><h1>Relevé du compteur de GAZ</h1></td>
+		</thead>
+		<thead>
+			<td colspan="4"><center><img src="img/compteur.png" width="50%"></center></td>
+		</thead>
+		<tr>
+			<td align="center" width="25%"></td>
+			<td align="center" width="25%"><h3>Premier relevé</h3></td>
+			<td align="center" width="25%"><h3>Second relevé</h3></td>
+			<td align="center" width="25%"><h3>Différence</h3></td>
+		</tr>
+		<tr style="background:#EAD6FF;">
+			<td align="center"><img src="img/gdf_suez.png" width="75%" style="margin:10px;"></td>
+			<td align="center"><input type="number" ng-model="store.data.compteur.first" placeholder="premier"  maxlength="8" type="text"></td>
+			<td align="center"><input type="number" ng-model="store.data.compteur.second" placeholder="second"  maxlength="8" type="text"></td>
+			<td align="center"><span class="number">{{store.data.compteur.second - store.data.compteur.first}} m³</span></td>
+		</tr>
+		<thead>
+			<td colspan="4"><h1>Consommation quotidienne</h1></td>
+		</thead>
+		<tr style="background:#CCC; height:80px;">
+			<td align="center">Delta [jours]</td>
+			<td align="center"><input type="number" ng-model="store.data.compteur.deltaJ" placeholder="delta jours" maxlength="8" type="text"></td>
+			<td align="center">Consommation</td>
+			<td align="center"><span class="number">{{(store.data.compteur.second - store.data.compteur.first) *10 / store.data.compteur.deltaJ | price:0}} kWh /j</span></td>
+		</tr>
+	</table>
+
+	<!-- STEP 3 -->
+    <fieldset class="ui-grid-a">
+		<div class="ui-block-a"><a my-href="store.previousHref('compteur')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+		<div class="ui-block-b">
+			<a ng-hide="(store.data.compteur.second - store.data.compteur.first) *10 / store.data.compteur.deltaJ > 50" my-href="store.nextHref('compteur')" ng-click="store.updateBill()"  class="ui-btn ui-icon-arrow-r ui-btn-icon-right ui-corner-all ui-btn-b">Continuer</a>
+			<a ng-show="(store.data.compteur.second - store.data.compteur.first) *10 / store.data.compteur.deltaJ > 50" id="clignote" my-href="store.nextHref('compteur')" ng-click="store.updateBill()"  class="ui-btn ui-icon-arrow-r ui-btn-icon-right ui-corner-all ui-btn-b">Consommation a vérifier</a>
+		</div>
+	</fieldset>
+	</section>
+</div>

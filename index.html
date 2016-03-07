@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
+	<meta http-equiv="Pragma" content="no-cache" />
+	<meta http-equiv="Cache" content="no store" />
+	<meta http-equiv="Expires" content="-1" />
+
+    <title>.: Conseil Habitation :.</title>
+
+    <!-- Bootstrap core CSS -->
+	<link rel="stylesheet" href="css/font-awesome.css">
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<link href="css/sticky-footer-navbar.css" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="css/videojs.css" />
+
+	<link rel="apple-touch-icon" href="logo.png"/>
+	<link rel="icon" href="img/favicon.ico" />
+
+    <!-- Custom styles for this template -->
+    <link href="css/jumbotron.css" rel="stylesheet">
+
+	<script type="text/javascript" src="js/underscore.min.js"></script>
+	<script type="text/javascript" src="js/jquery-latest.min.js"></script>
+	<script type="text/javascript" src="js/angular.min.js"></script>
+
+	<script src='https://www.google.com/recaptcha/api.js'></script>
+
+	<script type="text/javascript" src="js/PHP.js"></script>
+
+	<script type="text/javascript" src="js/functions.js"></script>
+	<script type="text/javascript" src="js/angular.html.js"></script>
+	<script type="text/javascript" src="js/angular.navbar.js"></script>
+	<script type="text/javascript" src="js/angular.app.js"></script>
+  </head>
+
+  <body ng-controller="navbar as app">
+
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="banner">
+      <div class="container">
+        <div class="navbar-header" style="">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#"></a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+			<li><a ng-show="online" href="#"><i class="fa fa-user"></i>{{ username}}</a></li>
+            <li><a onclick="loadURL('_index.html');" href="#">Home</a></li>
+			<li><a href="/logiciel.html">Logiciel</a></li>
+			<li><a href="/logiciel_junior.html">Logiciel Junior</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">tests <span class="caret"></span></a>
+              <ul ng-controller="Store as ctrl" class="dropdown-menu">
+                <li><a href="#" onclick="loadURL('/logiciel/source.html');">test1</a></li>
+                <li><a href="#">test1</a></li>
+                <li><a href="#">test1</a></li>
+                <li><a href="#">test1</a></li>
+                <li><a ng-click="ctrl.reset();">Reinitialiser l'application</a></li>
+              </ul>
+            </li>
+          </ul>
+			<ul class="nav navbar-nav navbar-right">
+			<li class="dropdown">
+		      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Session <span class="caret"></span></a>
+		      <ul class="dropdown-menu">
+		        <li><a href="#" ng-hide="connected" onclick="loadURL('_login.html');">Login</a></li>
+		        <li><a href="#" onclick="loadURL('_registration.html');">Registration</a></li>
+		        <li><a href="#">Members</a></li>
+				<li><a href="#" ng-show="connected" ng-click="disconnect();">Disconnect</a></li>
+		      </ul>
+		    </li>
+		</ul>
+        </div><!--/.navbar-collapse -->
+      </div>
+    </nav>
+
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="jumbotron" style="background:#ccc;">
+      <div class="container">
+		<img src="img/logo.png"> 
+      </div>
+    </div>
+
+    <div class="container" style="position:relative; top:-60px;">
+      <!-- Example row of columns -->
+      <div id="container">
+		
+      </div>
+    </div>
+    
+    
+	<!-- /container -->
+	
+    <footer class="footer" style="background:#000; height:100px; color:#fff;">
+      <div class="container">
+        <br> <center>&copy;2016 - <a href="http://app.conseil-habitation.com/">app.conseil-habitation.com/</a><br>
+        Managed by Pierre Pulinckx<br>
+        </center>
+      </div>
+    </footer>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="js/bootstrap.min.js"></script>
+
+	<script>
+	function loadURL(url) {
+		console.log('try to load', url); 
+		if(url) {
+			$.ajax({
+				url : url,
+				beforeSend : function() {
+					//$('#container').fadeOut(); 
+				},
+				success : function(data) {
+					// Get the $compile service from the app's injector
+					var injector = $('[ng-app]').injector();
+					var $compile = injector.get('$compile');
+
+					// Compile the HTML into a linking function...
+					var linkFn = $compile(data);
+					// ...and link it to the scope we're interested in.
+					// Here we'll use the $rootScope.
+					var $rootScope = injector.get('$rootScope');
+					var elem = linkFn($rootScope);
+					$('#container').html(elem);
+					
+					sessionStorage.setItem('currentUrl', url); 	
+					// Now that the content has been compiled, linked,
+					// and added to the DOM, we must trigger a digest cycle
+					// on the scope we used in order to update bindings.
+					$rootScope.$digest();
+				},
+				complete : function() {
+					//$('#container').fadeIn(); 
+				},
+			});
+		}
+	}
+
+	$(document).ready(function () {
+		var currentUrl = sessionStorage.getItem('currentUrl');
+		loadURL(currentUrl);
+	});
+	</script>
+	
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+  </body>
+</html>
+

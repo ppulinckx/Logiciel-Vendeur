@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<!--<html ng-app="store" manifest="site.manifest">-->
+<html ng-app="store" manifest="site.manifest">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        	<link rel="apple-touch-icon" href="logo.png"/>
+        	<link rel="icon" href="img/favicon.ico" />
+
+			<script type="text/javascript" src="js/PHP.js"></script>
+    		<script type="text/javascript" src="js/underscore/underscore.js"></script>
+			<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
+			<script type="text/javascript" src="js/jquery-ui.js"></script>
+			<script type="text/javascript" src="js/angular.min.js"></script>
+			<script type="text/javascript" src="js/angular.html.js"></script>
+			<script type="text/javascript" src="js/functions.js"></script>
+			<script type="text/javascript" src="js/catalog_windows.js"></script>
+			<script type="text/javascript" src="js/catalog_volets.js"></script>
+			<script type="text/javascript" src="js/sortable.module.js"></script>
+			<script type="text/javascript" src="js/app.js"></script>
+			<script type="text/javascript" src="js/video.js"></script>
+			<script type="text/javascript" src="js/packery.min.js"></script>
+
+			<link rel="stylesheet" type="text/css" href="css/videojs.css" />
+			<link rel="stylesheet" type="text/css" href="css/default.css" />
+			<link rel="stylesheet" type="text/css" href="css/font-awesome.min.css" />
+			<link rel="stylesheet" type="text/css" href="css/jquery.mobile.css" />
+<!--			<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />-->
+			<title>Conseil Habitation</title>
+
+			<script>
+			$(document).bind('mobileinit',function(){
+			    $.mobile.changePage.defaults.changeHash = false;
+			    $.mobile.hashListeningEnabled = false;
+			    $.mobile.pushStateEnabled = false;
+			});
+
+			videojs.options.flash.swf = "video-js.swf";
+			</script>
+			<script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
+			<script id="panel-init">
+			$(function() {
+				$( "body>[data-role='panel']" ).panel();
+				$('#clignote').hide(); 
+				$('#okbutton').hide();
+				$('#loader').hide();
+				$('#computeButton').on('click', function() {
+					animation();
+				});
+			});
+
+			function animation() {
+				console.log('demarrage de animation'); 
+				$('#clignote').hide(); 
+				$('#loader').show();
+				$('#okbutton').hide();
+				$('#contentCompute').show(); 
+				$('#contentCompute').html('Vérification des données...');
+				setTimeout(function(){ 
+					console.log('demarrage de calcul'); 
+					$('#contentCompute').html('Démarrage du calcul...'); 
+					setTimeout(function(){ 
+						$('#contentCompute').html('Collecte des résultats...'); 
+						setTimeout(function(){ 
+							$('#contentCompute').html(''); 
+							$('#loader').hide();
+							$('#clignote').show(); 
+							$('#okbutton').show();
+						}, 2000);
+					}, 2000);
+				}, 1000);
+			}
+
+			</script>
+    </head>
+
+    <body ng-controller="StoreController as store" ng-init="store.load()">
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ HEADER }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="header" data-position="fixed" data-theme="a" ng-init="step = store.data.step">
+
+			<div class="embedded">
+				<img ng-src="img/{{store.logo_gaz}}" width="15%">
+			</div>
+
+		</div>
+
+		<div data-role="footer">
+			<div data-role="popup" id="popup_video_augmentation_energie" data-theme="a">
+				<div data-role="header" data-theme="a"><h1>Augmentation du cout des énergies</h1></div>
+				<ng-video id="popup_video_augmentation_energie-screen" url="video/augmentation_energies.mp4" height="600" width="800"></ng-video>
+			</div>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ ENERGY }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="source">
+			<div class="embedded">
+				<center>
+				<br>
+				<p>
+				Découvrez en quelques minutes les solutions pour réaliser d'importantes économies sur vos factures,
+				obtenir un meilleur confort et une véritable plus-value pour votre maison. 
+				 </p></center>
+				<center>
+					<a class="energy" ng-repeat="energy in [store.energies[0], store.energies[1]]" ng-click="store.setValue('energy', energy);" href="#consommation"><img ng-src="img/{{energy.icon}}" style="width:140px; margin:5px; border:none;"></a>
+				</center>
+			</div>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ CONSOMMATION }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="consommation">
+			<form class="embedded" name="reviewForm" novalidate>
+				<h1>Consommation</h1>
+
+				<table style="width:100%">
+					<tr>
+						<td width="50%"><label>Numéro de client : </label></td>
+						<td width="50%"><input type="number" ng-change="store.save();" ng-model="store.data.customer.clientnumber" placeholder="Numéro client" maxlength="20" type="text"required></td>
+					</tr>
+					<tr>
+						<td width="50%"><label>Surface chauffée : </label></td>
+						<td width="45%"><input type="number" ng-change="store.save();" ng-model="store.data.home.surface" placeholder="Surface chauffée" maxlength="8" type="text"required></td>
+						<td width="5%" align="center"><b>m²</b></td>
+					</tr>
+					<tr>
+						<td><label>Consommation energétique annuelle : </label></td>
+						<td><input  type="number" ng-change="store.save();" ng-model="store.data.home.consommation" placeholder="Consommation" maxlength="8" type="text" required></td>
+						<td align="center"><b>kWh</b></td>
+					</tr>
+			 	</table>	
+				
+			 	<table id="viewlist">
+					<thead>
+						<td width="25%" align="center"></center></td>
+						<td width="25%" align="center"><h1>Cette année</h1></td>
+						<td width="25%" align="center"><h1>Mensuel</h1></td>
+						<td width="25%" align="center"><h1>Sur 10 ans</h1></td>
+					</thead>
+					<tr style="background:#B2E6FF;">
+						<td align="center"><img ng-src="img/{{store.logo_elec}}" width="75%"></td>
+						<td align="center"><input type="number" ng-change="store.updateConso('annual')" ng-model="store.data.annual.electricite" placeholder="Annuel" maxlength="8" type="text"></td>
+						<td align="center"><input type="number" ng-change="store.updateConso('monthly')" ng-model="store.data.monthly.electricite" placeholder="Mensuel" maxlength="8" type="text"></td>
+						<td align="center"><span class="number">{{store.data.decennial.electricite | price:0}} €</span></td>
+					</tr>
+					<tr style="background:#EAD6FF;" ng-if="store.data.energy.label==='gaz'">
+						<td align="center"><img src="img/{{store.logo_gaz}}"  width="75%"></td>
+						<td align="center"><input type="number" ng-change="store.updateConso('annual')" ng-model="store.data.annual.gaz" placeholder="Annuel" maxlength="8" type="text"></td>
+						<td align="center"><input type="number" ng-change="store.updateConso('monthly')" ng-model="store.data.monthly.gaz" placeholder="Mensuel" maxlength="8" type="text"></td>
+						<td align="center"><span class="number">{{store.data.decennial.gaz | price:0}} €</span></td>
+					</tr>
+					<tr style="background:#ccc; height:80px;">
+						<td align="center"><span style="font-size:30px; font-weight:bold;">Total</span></td>
+						<td align="center"><span class="number">{{store.data.annual.total | price:0}} €</span></td>
+						<td align="center"><span class="number">{{store.data.annual.total/10 | price:0}} €</span></td>
+						<td align="center"><span class="number">{{store.data.decennial.total | price:0}} €</span></td>
+					</tr>
+				</table>
+			 	
+				<section>
+
+					<a href="#popup_video_augmentation_energie" data-rel="popup" data-position-to="window" data-transition="fade" class="ui-btn ui-icon-camera ui-btn-icon-left ui-corner-all ui-btn-a ui-btn-inline">Video</a>
+					<p>Selon la CRE, une augmentation de 30% des prix de l'électricité entre 2012 et 2017 est prévisible, soit une augmentation de 6% par an.</p>
+					<p>De 2005 à 2011, le gaz a augmenté de 60% soit une augmentation moyenne de 10% par an (sourse CRE).</p>
+					<p>Le prix du fioul est passé de 37 centimes le litre en 2002 à 97 centimes le litre en 2012, soit une augmentation de 162% en 10 ans. 
+						Ceci équivaut à une augmentation moyenne de 16.2% par an (source CLCV).</p>
+					<p>De 2009 à 2013, le prix des granulés de bois a augmenté de 13% soit 2.6% par an (source CFBL). </p>
+				</section>
+
+				<!--STEP 1-->
+				<fieldset class="ui-grid-a">
+					<div class="ui-block-a"><a ng-href="#source" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+					<div class="ui-block-b"><a ng-href="#directeconomie" class="ui-btn ui-btn-b ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a></div>
+				</fieldset>
+			</form>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ BLOQUAGE }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="directeconomie">
+			<section class="embedded">
+			<table id="viewlist">
+				<thead>
+					<td colspan="6"><h1>Etat actuel</h1></td>
+				</thead>
+				<thead>
+					<td width="25%" align="center"></td>
+					<td width="15%" align="center"><h3>Annuel</h3></td>
+					<td width="15%" align="center"><h3>{{store.yyyy+1}}</h3></td>
+					<td width="15%" align="center"><h3>{{store.yyyy+2}}</h3></td>
+					<td width="15%" align="center" ng-show="store.data.energy.id==2"><h3>{{store.yyyy+3}}</h3></td>
+					<td width="15%" align="center"><h3>Sur {{store.data.energy.id==2 ? 3 : 2}} ans</h3></td>
+				</thead>
+				<tr style="background:#B2E6FF;">
+					<td width=""><center><img src="img/{{store.logo_elec}}" width="75%"></center></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1.06 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1.06*1.06 | price:0}} €</span></td>
+					<td align="center" ng-show="store.data.energy.id==2"><span class="number">{{store.data.annual.electricite*1.06*1.06*1.06 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.cumulus.electricite | price:0}} €</span></td>
+				</tr>
+				<tr style="background:#EAD6FF;" ng-show="store.data.energy.label==='gaz'">
+					<td align="center"><img src="img/{{store.logo_gaz}}" width="75%"></center></td>
+					<td align="center"><span class="number">{{store.data.annual.gaz*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.gaz*1.1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.gaz*1.1*1.1 | price:0}} €</span></td>
+					<td align="center" ng-show="store.data.energy.id==2"><span class="number">{{store.data.annual.gaz*1.1*1.1*1.1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.cumulus.gaz | price:0}} €</span></td>
+				</tr>
+				<tr style="background:#ccc;" ng-show="store.data.energy.label==='gaz'">
+					<td align="center"><center><h3>Total</h3></center></td>
+					<td align="center"><span class="number">{{data.annual.electricite + store.data.annual.gaz | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1.06 + store.data.annual.gaz*1.1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1.06*1.06 + store.data.annual.gaz*1.1*1.1 | price:0}} €</span></td>
+					<td align="center" ng-show="store.data.energy.id==2"><span class="number">{{store.data.annual.electricite*1.06*1.06*1.06 + store.data.annual.gaz*1.1*1.1*1.1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.cumulus.total | price:0}} €</span></td>
+				</tr>
+				<thead>
+					<td colspan="6"><h1>Etat figé</h1></td>
+				</thead>
+				<thead>
+					<td width="25%" align="center"></td>
+					<td width="15%" align="center"><h3>Annuel</h3></td>
+					<td width="15%" align="center"><h3>{{store.yyyy+1}}</h3></td>
+					<td width="15%" align="center"><h3>{{store.yyyy+2}}</h3></td>
+					<td width="15%" align="center" ng-show="store.data.energy.id==2"><h3>{{store.yyyy+3}}</h3></td>
+					<td width="15%" align="center"><h3>Sur {{store.data.energy.id==2 ? 3 : 2}} ans</h3></td>
+				</thead>
+				<tr style="background:#B2E6FF;">
+					<td align="center"><center><img src="img/Engie_Logo.png" width="75%"></center></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1 | price:0}} €</span></td>
+					<td align="center" ng-show="store.data.energy.id==2"><span class="number">{{store.data.annual.electricite*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.statik.electricite | price:0}} €</span></td>
+				</tr>
+				<tr style="background:#EAD6FF;" ng-show="store.data.energy.label==='gaz'">
+					<td width=""><center><img src="img/Engie_Logo.png" width="75%"></center></td>
+					<td align="center"><span class="number">{{store.data.annual.gaz*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.gaz*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.gaz*1 | price:0}} €</span></td>
+					<td align="center" ng-show="store.data.energy.id==2"><span class="number">{{store.data.annual.gaz*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.statik.gaz | price:0}} €</span></td>
+				</tr>
+				<tr style="background:#ccc;" ng-show="store.data.energy.label==='gaz'">
+					<td width=""><center><h3>Total</h3></center></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1 + store.data.annual.gaz*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1 + store.data.annual.gaz*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1 + store.data.annual.gaz*1 | price:0}} €</span></td>
+					<td align="center" ng-show="store.data.energy.id==2"><span class="number">{{store.data.annual.electricite*1 + store.data.annual.gaz*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.statik.total | price:0}} €</span></td>
+				</tr>
+				<tr style="background:#9ACD32;">
+					<td width=""><center><h3>Gains</h3></center></td>
+					<td width=""><center><img src="img/cochon.png" width="70%"></center></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*(1.06-1) + store.data.annual.gaz*(1.1-1) | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*(1.06*1.06-1) + store.data.annual.gaz*(1.1*1.1-1) | price:0}} €</span></td>
+					<td align="center" ng-show="store.data.energy.id==2"><span class="number">{{store.data.annual.electricite*(1.06*1.06*1.06-1) + store.data.annual.gaz*(1.1*1.1*1.1-1) | price:0}} €</span></td>
+					<td align="center"><span class="number" style="background:#FF0;">{{store.data.gains.total | price:0}} €</span></td>
+				</tr>
+			</table>
+			<!--STEP 2-->
+			<fieldset class="ui-grid-a">
+				<div class="ui-block-a"><a ng-href="#consommation" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+				<div class="ui-block-b"><a ng-href="#compteur" ng-click="store.alert=false" class="ui-btn ui-icon-arrow-r ui-btn-icon-right ui-corner-all ui-btn-b">Continuer</a></div>
+			</fieldset>
+			</section>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{  COMPTEUR  }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="compteur" ng-keyup="store.save()">
+			<section class="embedded">
+			<table id="viewlist" ng-if="store.data.energy.label==='gaz'">
+				<thead>
+					<td colspan="4"><h1>Relevé du compteur de GAZ</h1></td>
+				</thead>
+				<thead>
+					<td colspan="4"><center><img src="img/compteur.png" width="50%"></center></td>
+				</thead>
+				<tr>
+					<td align="center" width="25%"></td>
+					<td align="center" width="50%"><h3>Relevé compteur</h3></td>
+					<td align="center" width="25%"></td>
+				</tr>
+				<tr style="background:#EAD6FF;">
+					<td align="center"><img src="img/Engie_Logo.png" width="75%" style="margin:10px;"></td>
+					<td align="center"><input type="number" ng-change="store.alert=false" ng-model="store.data.compteur.first" placeholder="Relevé du compteur"  maxlength="8" type="text"></td>
+					<td align="center" width="25%"><h3>m³</h3></td>
+				</tr>
+			</table>
+
+			<table id="viewlist" ng-if="store.data.energy.label==='electricite'">
+				<thead>
+					<td colspan="4"><h1>Relevé du compteur d'Electricité</h1></td>
+				</thead>
+				<thead>
+					<td colspan="4"><center><img src="img/compteur-elec.png" width="30%"></center></td>
+				</thead>
+				<tr>
+					<td align="center" width="25%"></td>
+					<td align="center" width="50%"><h3>Relevé compteur</h3></td>
+					<td align="center" width="25%"></td>
+				</tr>
+				<tr style="background:#B2E6FF;">
+					<td align="center"><img src="img/Engie_Logo.png" width="75%" style="margin:10px;"></td>
+					<td align="center"><input type="number" ng-model="store.data.compteur.first" placeholder="Relevé du compteur"  maxlength="8" type="text"></td>
+					<td align="center" width="25%"><h3>kWh</h3></td>
+				</tr>
+			</table>
+
+			<div data-role="popup" id="popupDialog" data-theme="a" data-dismissible="false" style="width:600px;">
+			    <div style="margin:20px;">
+					<div id="loader"><center><img src="img/Preloader.gif"></center></div>
+					<div id="contentCompute"></div>
+					<div id="clignote" style="padding:40px;" class="ui-btn ui-icon-alert ui-btn-icon-left ui-corner-all ui-btn-b">Consommation a vérifier</div>
+					<a id="okbutton" href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-b" data-rel="back">Ok</a>
+			    </div>
+			</div>
+
+			<!-- STEP 3 -->
+            <fieldset class="ui-grid-a">
+				<div class="ui-block-a"><a ng-href="#directeconomie" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+				<div class="ui-block-b">
+					<a id="computeButton" ng-if="store.data.compteur.first>0" onclick="animation()" href="#popupDialog" data-rel="popup" data-position-to="window" data-transition="pop" class="ui-btn ui-icon-arrow-r ui-btn-icon-right ui-corner-all ui-btn-b">Entrer</a>
+				</div>
+			</fieldset>
+			</section>
+		</div>
+
+    </body>
+</html>

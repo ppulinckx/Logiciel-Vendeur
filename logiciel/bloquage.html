@@ -1,0 +1,92 @@
+<div data-role="page" id="directeconomie">
+			<section class="embedded">
+			<table id="viewlist">
+				<thead>
+					<td colspan="6"><h1>Etat actuel</h1></td>
+				</thead>
+				<thead>
+					<td width="25%" align="center"></td>
+					<td width="15%" align="center"><h3>Annuel</h3></td>
+					<td width="15%" align="center"><h3>{{store.yyyy+1}}</h3></td>
+					<td width="15%" align="center"><h3>{{store.yyyy+2}}</h3></td>
+					<td width="15%" align="center" ng-show="store.data.energy.id==2"><h3>{{store.yyyy+3}}</h3></td>
+					<td width="15%" align="center"><h3>Sur {{store.data.energy.id==2 ? 3 : 2}} ans</h3></td>
+				</thead>
+				<tr style="background:#B2E6FF;">
+					<td width=""><center><img src="img/{{store.logo_elec}}" width="75%"></center></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1.06 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1.06*1.06 | price:0}} €</span></td>
+					<td align="center" ng-show="store.data.energy.id==2"><span class="number">{{store.data.annual.electricite*1.06*1.06*1.06 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.cumulus.electricite | price:0}} €</span></td>
+				</tr>
+				<tr style="background:#EAD6FF;" ng-show="store.data.energy.label==='gaz'">
+					<td align="center"><img src="img/{{store.logo_gaz}}" width="75%"></center></td>
+					<td align="center"><span class="number">{{store.data.annual.gaz*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.gaz*1.1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.gaz*1.1*1.1 | price:0}} €</span></td>
+					<td align="center" ng-show="store.data.energy.id==2"><span class="number">{{store.data.annual.gaz*1.1*1.1*1.1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.cumulus.gaz | price:0}} €</span></td>
+				</tr>
+				<tr style="background:#ccc;" ng-show="store.data.energy.label==='gaz'">
+					<td align="center"><center><h3>Total</h3></center></td>
+					<td align="center"><span class="number">{{data.annual.electricite + store.data.annual.gaz | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1.06 + store.data.annual.gaz*1.1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1.06*1.06 + store.data.annual.gaz*1.1*1.1 | price:0}} €</span></td>
+					<td align="center" ng-show="store.data.energy.id==2"><span class="number">{{store.data.annual.electricite*1.06*1.06*1.06 + store.data.annual.gaz*1.1*1.1*1.1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.cumulus.total | price:0}} €</span></td>
+				</tr>
+				<thead>
+					<td colspan="6"><h1>Etat figé</h1></td>
+				</thead>
+				<thead>
+					<td width="25%" align="center"></td>
+					<td width="15%" align="center"><h3>Annuel</h3></td>
+					<td width="15%" align="center"><h3>{{store.yyyy+1}}</h3></td>
+					<td width="15%" align="center"><h3>{{store.yyyy+2}}</h3></td>
+					<td width="15%" align="center" ng-show="store.data.energy.id==2"><h3>{{store.yyyy+3}}</h3></td>
+					<td width="15%" align="center"><h3>Sur {{store.data.energy.id==2 ? 3 : 2}} ans</h3></td>
+				</thead>
+				<tr style="background:#B2E6FF;">
+					<td align="center"><center><img src="img/Engie_Logo.png" width="75%"></center></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1 | price:0}} €</span></td>
+					<td align="center" ng-show="store.data.energy.id==2"><span class="number">{{store.data.annual.electricite*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.statik.electricite | price:0}} €</span></td>
+				</tr>
+				<tr style="background:#EAD6FF;" ng-show="store.data.energy.label==='gaz'">
+					<td width=""><center><img src="img/gdf_suez.png" width="75%"></center></td>
+					<td align="center"><span class="number">{{store.data.annual.gaz*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.gaz*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.gaz*1 | price:0}} €</span></td>
+					<td align="center" ng-show="store.data.energy.id==2"><span class="number">{{store.data.annual.gaz*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.statik.gaz | price:0}} €</span></td>
+				</tr>
+				<tr style="background:#ccc;" ng-show="store.data.energy.label==='gaz'">
+					<td width=""><center><h3>Total</h3></center></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1 + store.data.annual.gaz*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1 + store.data.annual.gaz*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*1 + store.data.annual.gaz*1 | price:0}} €</span></td>
+					<td align="center" ng-show="store.data.energy.id==2"><span class="number">{{store.data.annual.electricite*1 + store.data.annual.gaz*1 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.statik.total | price:0}} €</span></td>
+				</tr>
+				<tr style="background:#9ACD32;">
+					<td width=""><center><h3>Gains</h3></center></td>
+					<td width=""><center><img src="img/cochon-tirelire.png" width="50%"></center></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*(1.06-1) + store.data.annual.gaz*(1.1-1) | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite*(1.06*1.06-1) + store.data.annual.gaz*(1.1*1.1-1) | price:0}} €</span></td>
+					<td align="center" ng-show="store.data.energy.id==2"><span class="number">{{store.data.annual.electricite*(1.06*1.06*1.06-1) + store.data.annual.gaz*(1.1*1.1*1.1-1) | price:0}} €</span></td>
+					<td align="center"><span class="number" style="background:#FF0;">{{store.data.gains.total | price:0}} €</span></td>
+				</tr>
+			</table>
+			<!--STEP 2-->
+			<fieldset class="ui-grid-a">
+				<div class="ui-block-a"><a my-href="store.previousHref('directeconomie')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+				<div class="ui-block-b">
+					<a ng-if="store.data.energy.id==2" my-href="store.nextHref('directeconomie')" class="ui-btn ui-icon-arrow-r ui-btn-icon-right ui-corner-all ui-btn-b">Continuer</a>
+					<a ng-if="store.data.energy.id!=2" my-href="store.posHref('directeconomie',2)" class="ui-btn ui-icon-arrow-r ui-btn-icon-right ui-corner-all ui-btn-b">Continuer</a>
+				</div>
+			</fieldset>
+			</section>
+		</div>

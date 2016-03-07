@@ -1,0 +1,72 @@
+<script type="text/javascript">
+function connect() {
+	
+	console.log('>> registration');
+	var form = $("#formRegister");
+	var data = form.serialize();
+	var check = form.serializeArray(); 
+	$.ajax({
+		type: "POST",
+		url: "setRegister.php",
+		data: data,
+		success: function(html){
+			var html = JSON.parse(html); 
+			if(html.success){
+				LoadContainer('_login.html');
+			}
+			else{
+				$("#login").html(html.error);
+			}
+		},
+		error:function(txt) {
+			$("#login").html("Request aborted.");
+		},
+		beforeSend:function() {
+			$("#login").html("Loading...");
+		}
+	});
+	return false;
+}
+</script>
+
+<div class="container" style="max-width:350px;">
+    <div class="card card-container">
+        <center><img id="profile-img" class="img-circle" src="//ssl.gstatic.com/accounts/ui/avatar_2x.png" /></center>
+        <p id="profile-name" class="profile-name-card"></p>
+        <form class="form-signin" id="formRegister">
+            <span id="reauth-email" class="reauth-email"></span>
+
+			<div class="input-group">
+				<div class="input-group-addon"><i class="fa fa-user"></i></div>
+				<input type="email" id="inputEmail" name="name" class="form-control" placeholder="Nom & Prénom" required autofocus>
+			</div>
+
+			<div class="input-group">
+				<div class="input-group-addon"><i class="fa fa-user"></i></div>
+				<input type="email" id="inputEmail" name="username" class="form-control" placeholder="Nom d'utilisateur" required autofocus>
+			</div>
+
+			<div class="input-group">
+				<div class="input-group-addon"><i class="fa fa-user"></i></div>
+				<input type="email" id="inputEmail" name="email" class="form-control" placeholder="Addresse mail" required autofocus>
+			</div>
+
+			<div class="input-group">
+				<div class="input-group-addon"><i class="fa fa-user"></i></div>
+				<input type="email" id="inputConfirmEmail" name="confirm_email" class="form-control" placeholder="Confirmation mail" required autofocus>
+			</div>
+
+			<div class="input-group">
+				<div class="input-group-addon"><i class="fa fa-unlock-alt"></i></div>
+				<input type="password" id="inputPassword" name="password" class="form-control" placeholder="Password" required>
+			</div>
+
+			<div class="input-group">
+				<div class="input-group-addon"><i class="fa fa-unlock-alt"></i></div>
+				<input type="password" id="inputConfirmPassword" name="confirm_password" class="form-control" placeholder="Confirmation Password" required>
+			</div>
+			<br>
+            <button id="login" class="btn btn-lg btn-primary btn-block btn-signin" onclick="connect()" type="button">Register me</button>
+        </form><!-- /form -->
+    </div><!-- /card-container -->
+</div><!-- /container -->

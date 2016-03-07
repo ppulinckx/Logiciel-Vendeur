@@ -1,0 +1,13 @@
+<div ng-controller="navbar as nav" ng-init=connect();></div>
+<div id="source" ng-controller="Store as ctrl">
+	<div class="embedded">
+		<center>
+		<h2>Quel est votre mode de chauffage ?</h2>
+		<p>
+		Découvrez en quelques minutes les solutions pour réaliser d'importantes économies sur vos factures,
+		obtenir un meilleur confort et une véritable plus-value pour votre maison. 
+		</p>
+		<a class="energy" ng-repeat="energy in ctrl.energies" ng-click="ctrl.setValue('energy', energy); ctrl.nextHref('./logiciel/source.html');" href="#"><img style="width:140px; margin:5px; border:none;" ng-src="img/{{energy.icon}}"></a>
+		</center>
+	</div>
+</div>

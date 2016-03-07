@@ -1,0 +1,26 @@
+<div ng-controller="navbar as app" class="container" style="max-width:350px;">
+    <div class="card card-container">
+        <!-- <img class="profile-img-card" src="//lh3.googleusercontent.com/-6V8xOA6M7BA/AAAAAAAAAAI/AAAAAAAAAAA/rzlHcD0KYwo/photo.jpg?sz=120" alt="" /> -->
+        <center><img id="profile-img" class="img-circle" src="//ssl.gstatic.com/accounts/ui/avatar_2x.png" /></center>
+        <p id="profile-name" class="profile-name-card"></p>
+        <form class="form-signin" id="formConnect">
+            <span id="reauth-email" class="reauth-email"></span>
+
+			<div class="input-group">
+				<div class="input-group-addon"><i class="fa fa-unlock-alt"></i></div>
+				<input type="email" id="inputEmail" name="email" class="form-control" placeholder="Email address" required autofocus>
+			</div>
+
+			<div class="input-group">
+				<div class="input-group-addon"><i class="fa fa-user"></i></div>
+				<input type="password" id="inputPassword" name="password" class="form-control" placeholder="Password" required>
+			</div>
+
+			<div id="error"></div>
+			<br>
+            <button id="login" class="btn btn-lg btn-primary btn-block btn-signin" ng-click="authentification()" type="button">Sign in</button>
+        </form><!-- /form -->
+        <br><a href="#" class="forgot-password"><i class="fa fa-cogs"></i> Forgot the password?</a>
+		<br><a onclick="loadURL('_registration.html');" href="#"><i class="fa fa-save"></i> Register me</a>
+    </div><!-- /card-container -->
+</div><!-- /container -->

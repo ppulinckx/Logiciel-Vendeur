@@ -1,0 +1,1846 @@
+<!DOCTYPE html>
+<!--<html ng-app="store" manifest="site.manifest">-->
+<html ng-app="store">
+    <head>
+			<meta charset="utf-8" />
+			<meta name="viewport" content="width=device-width, initial-scale=1">
+			<link rel="apple-touch-icon" href="logo.png"/>
+			<link rel="icon" href="img/favicon.ico" />
+			<script type="text/javascript" src="js/PHP.js"></script>
+			<script type="text/javascript" src="js/underscore/underscore.js"></script>
+			<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
+			<script type="text/javascript" src="js/jquery-ui.js"></script>
+			<script type="text/javascript" src="js/angular.min.js"></script>
+			<script type="text/javascript" src="js/angular.html.js"></script>
+			<script type="text/javascript" src="js/functions.js"></script>
+			<script type="text/javascript" src="js/highcharts.js"></script>
+			<script type="text/javascript" src="js/catalog_windows.js"></script>
+			<script type="text/javascript" src="js/catalog_volets.js"></script>
+			<script type="text/javascript" src="js/sortable.module.js"></script>
+			<script type="text/javascript" src="js/app.js?v=20162202"></script>
+			<script type="text/javascript" src="js/video.js"></script>
+			<script type="text/javascript" src="js/packery.min.js"></script>
+
+			<link rel="stylesheet" type="text/css" href="css/videojs.css" />
+			<link rel="stylesheet" type="text/css" href="css/default.css" />
+			<link rel="stylesheet" type="text/css" href="css/font-awesome.min.css" />
+			<link rel="stylesheet" type="text/css" href="css/jquery.mobile.css" />
+			<title>Conseil Habitation</title>
+
+			<script>
+			$(document).bind('mobileinit',function(){
+			    $.mobile.changePage.defaults.changeHash = false;
+			    $.mobile.hashListeningEnabled = false;
+			    $.mobile.pushStateEnabled = false;
+			});
+
+			videojs.options.flash.swf = "video-js.swf";
+			</script>
+			<script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
+			<script id="panel-init">
+			$(function() {
+				$( "body>[data-role='panel']" ).panel();
+			});
+			</script>
+    </head>
+
+    <body ng-controller="StoreController as store" ng-init="store.load(); store.connect();">
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ HEADER }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="header" data-position="fixed" data-theme="a" ng-init="step = store.data.step">
+
+			<div data-role="popup" id="popupLogin" data-theme="a" class="ui-corner-all">
+				<div data-role="header" data-theme="a"><h1>store.data</h1></div>
+				<div style="padding:10px 20px;"><pre style="height:500px; overflow:scroll;">{{ store.data | json }}</pre></div>
+			</div>
+
+			<div data-role="popup" id="popupMenu" data-theme="b">
+				<ul data-role="listview" data-inset="true" style="min-width:210px;">
+					<li ng-show="online" data-role="list-divider" data-theme="a" style="background:#CF9;"><a><h1>Online</h1></a></li>
+					<li ng-hide="online" data-role="list-divider" data-theme="a" style="background:#FC0;"><a><h1>Offline</h1></a></li>
+					<li><a ng-confirm-click="Etes-vous certain de vouloir réinitialiser les données ?" ng-click="store.reset();" href="#source">Réinitialiser</a></li>
+					<li><a href="#saveData" data-icon="gear">Sauver</a></li>
+					<li><a href="#loadData" data-icon="gear">Charger</a></li>
+					<li><a ng-click="disconnect();" data-icon="gear">Se connecter</a></li>
+					<li><a href="#registration" data-icon="gear">S'enregistrer</a></li>
+				</ul>
+			</div>
+
+			<div class="embedded">
+				<img src="img/logo.png" />
+				<a href="#nav-panel" data-icon="bars" data-iconpos="notext" class="ui-btn ui-btn-inline ui-mini ui-corner-all ui-btn-icon-right ui-icon-action" style="float:right;">Aller vers...</a>
+				<a ng-show="store.checkIssues('isolation')" href="#popupDimensions" data-rel="popup" data-transition="slideup" class="ui-btn ui-btn-inline ui-mini ui-corner-all ui-btn-icon-right ui-icon-grid" style="float:right;">Dimensions</a>
+				<a href="#popupMenu" data-rel="popup" data-transition="slideup" class="ui-btn ui-btn-inline ui-mini ui-corner-all ui-btn-icon-right ui-icon-bars" style="float:right;">Menu</a>
+				<a href="#popupLogin" data-rel="popup" data-position-to="window" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-icon-info ui-btn-icon-left ui-btn-a" data-transition="pop" style="float:right;">Data</a>
+				<a ng-click="store.compute();" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-icon-gear ui-btn-icon-left ui-btn-a" style="float:right;">Compute</a>
+			</div>
+
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ PANELS }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="panel" data-position="right" data-position-fixed="true" data-display="overlay" data-theme="b" id="nav-panel" ng-init="store.compute();">
+	        <ul data-role="listview">
+				<li data-icon="delete"><a href="#" data-rel="close">Fermer</a></li>
+				<li><a href="#consommation">Consommation</a></li>
+<!--				<li ng-show="step.consommation"><a href="#habitation">Note habitation</a></li>-->
+				<li><a href="#questionnaire" ng-click="store.updateBill();">Questionnaire</a></li>
+				<li ng-show="step.questionnaire"><a href="#class_energy">Classe énergétique</a></li>
+				<li ng-show="step.questionnaire"><a href="#taxeco2">Taxe CO<sub>2</sub></a></li>
+				<li ng-show="step.questionnaire"><a href="#solutions" ng-click="store.compute()">Choisir des solutions</a></li>
+				<li ng-show="step.solutions && step.consommation"><a href="#simulation" ng-click="store.updateCart()">Exemple voitures</a></li>
+				<li ng-show="store.isProduct('renovation_fenetre').checked"><a href="#popup_fenetre">Dimensions fenêtres [<htmldiv content="store.countItem('renovation_fenetre')"></htmldiv>]</a></li>
+				<li ng-show="store.isProduct('volets').checked"><a href="#popup_volet">Dimensions volets [<htmldiv content="store.countItem('volets')"></htmldiv>]</a></li>
+<!--				<li ng-show="store.isProduct('iso_comble').checked"><a href="#popup_comble">Dimensions combles [<htmldiv content="store.countItem('iso_comble')"></htmldiv>]</a></li>-->
+				<li ng-show="store.isProduct('renovation_toiture').checked"><a href="#popup_toiture">Dimensions toitures [<htmldiv content="store.countItem('renovation_toiture')"></htmldiv>]</a></li>
+				<li ng-show="store.isProduct('hydrofuge_toiture').checked"><a href="#popup_toiture">Dimensions toitures [<htmldiv content="store.countItem('hydrofuge_toiture')"></htmldiv>]</a></li>
+				<li ng-show="store.isProduct('iso_mur_int').checked"><a href="#popup_mur_int">Dimensions murs intérieurs [<htmldiv content="store.countItem('iso_mur_int')"></htmldiv>]</a></li>
+				<li ng-show="store.isProduct('iso_mur_ext').checked"><a href="#popup_mur_ext">Dimensions murs extérieurs [<htmldiv content="store.countItem('iso_mur_ext')"></htmldiv>]</a></li>
+				<li ng-show="store.isProduct('iso_sous_sol').checked"><a href="#popup_sol">Dimensions sols [<htmldiv content="store.countItem('iso_sous_sol')"></htmldiv>]</a></li>
+				<li ng-show="store.isProduct('porte_entree').checked"><a href="#popup_porte">Choix portes d'entrée [<htmldiv content="store.countItem('porte_entree')"></htmldiv>]</a></li>
+				<li ng-show="store.isProduct('poele_granules').checked"><a href="#popup_poele">Choix poeles granulés [<htmldiv content="store.countItem('poele_granules')"></htmldiv>]</a></li>
+				<li ng-show="store.isProduct('radiateur_inertie').checked"><a href="#popup_radiateur_inertie">Radiateurs inertie[<htmldiv content="store.countItem('radiateur_inertie')"></htmldiv>]</a></li>
+				<li ng-show="step.solutions && step.consommation"><a href="#investment" ng-click="store.updateCart()">Investissement</a></li>
+				<li ng-show="step.solutions && step.consommation"><a href="#synthese" ng-click="store.updateCart()">Synthèse</a></li>
+	        </ul>
+	    </div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ FOOTER }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="footer" data-position="fixed" data-theme="a">
+			<h1>&copy; ConseilHabitation 2015-2016</h1>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ ENERGY }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="source">
+			<div class="embedded">
+				<center><h2>Quel est votre mode de chauffage ?</h2>
+				<br><br><br>
+				<p>
+				Découvrez en quelques minutes les solutions pour réaliser d'importantes économies sur vos factures,
+				obtenir un meilleur confort et une véritable plus-value pour votre maison. 
+				 </p></center>
+				<center>
+					<a class="energy" ng-repeat="energy in store.energies" ng-click="store.setValue('energy', energy); store.updateBill();"  href="#consommation"><img ng-src="img/{{energy.icon}}" style="width:140px; margin:5px; border:none;"></a>
+				</center>
+			</div>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ LOGIN  }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="login">
+			<div class="embedded">
+				<h1>Connexion</h1>
+				<table style="width:100%">
+					<tr>
+						<td width="50%">Login : </td>
+						<td width="50%"><input name="email" placeholder="Login" maxlength="20" type="text" size="20"></td>
+					</tr>
+					<tr>
+						<td width="50%">Password : </td>
+						<td width="50%"><input name="password" placeholder="Mot de passe" maxlength="20" type="password"></td>
+					</tr>
+				</table>
+				<div id="error_login"></div>
+				<button id="login" class="ui-btn ui-corner-all ui-btn-a" ng-click="authentification();">Se connecter</button>
+				<a href="#registration" class="ui-btn ui-corner-all ui-btn-b">S'enregistrer</a>
+			</div>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ REGISTER  }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="registration">
+			<div class="embedded">
+				<h1>Registration</h1>
+				<table style="width:100%">
+					<tr>
+						<td width="50%">nom et prénom : </td>
+						<td width="50%"><input name="name" placeholder="Nom & Prénom" maxlength="100" type="text"></td>
+					</tr>
+					<tr>
+						<td width="50%">username : </td>
+						<td width="50%"><input name="username" placeholder="nom d'utilisateur" maxlength="100" type="text"></td>
+					</tr>
+					<tr>
+						<td width="50%">email : </td>
+						<td width="50%"><input name="remail" placeholder="Adresse mail" maxlength="100" type="text"></td>
+					</tr>
+					<tr>
+						<td width="50%">Confirm email : </td>
+						<td width="50%"><input name="confirm_email" placeholder="Retaper l'adresse mail" maxlength="100" type="text"></td>
+					</tr>
+					<tr>
+						<td width="50%">Password : </td>
+						<td width="50%"><input name="rpassword" placeholder="Mot de passe" maxlength="20" type="password"></td>
+					</tr>
+					<tr>
+						<td width="50%">Confirm password : </td>
+						<td width="50%"><input name="confirm_password" placeholder="Retaper le mot de passe" maxlength="20" type="password"></td>
+					</tr>
+				</table>
+				<div id="error_registration"></div>
+				<button id="registration" class="ui-btn ui-corner-all ui-btn-a" ng-click="registration();">S'enregistrer</button>
+				<a href="#login" class="ui-btn ui-corner-all ui-btn-b">Se connecter</a>
+			</div>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ SAVEDATA }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="saveData">
+			<div class="embedded">
+				<h2>Customer data</h2>
+				<table style="width:100%">
+					<tr>
+						<td width="50%">uuid : </td>
+						<td width="50%">{{store.data.uuid}}</td>
+					</tr>
+					<tr>
+						<td width="50%">Nom : </td>
+						<td width="50%"><input ng-change="store.save()" ng-model="store.data.customer.name" placeholder="Nom du client" maxlength="20" type="text"></td>
+					</tr>
+					<tr>
+						<td width="50%">Prénom : </td>
+						<td width="50%"><input ng-change="store.save()" ng-model="store.data.customer.prenom" placeholder="Prénom du client" maxlength="20" type="text"></td>
+					</tr>
+					<tr>
+						<td width="50%">Rue : </td>
+						<td width="50%"><input ng-change="store.save()" ng-model="store.data.customer.street" placeholder="Nom de la rue" maxlength="50" type="text"></td>
+					</tr>
+					<tr>
+						<td width="50%">Boite : </td>
+						<td width="50%"><input ng-change="store.save()" ng-model="store.data.customer.boxnumber" placeholder="Numéro de boite" maxlength="50" type="number"></td>
+					</tr>
+					<tr>
+						<td width="50%">Localité : </td>
+						<td width="50%"><input ng-change="store.save()" ng-model="store.data.customer.city" placeholder="Localité" maxlength="50" type="text"></td>
+					</tr>
+					<tr>
+						<td width="50%">Numéro de téléphone : </td>
+						<td width="50%"><input ng-change="store.save()" ng-model="store.data.customer.phonenumber" placeholder="Nom du client" maxlength="10" type="text"></td>
+					</tr>
+				</table>
+				<fieldset class="ui-grid-a">
+					<div class="ui-block-a"><a href="index.html" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all ui-btn-b" data-rel="back">Retour</a></div>
+					<div class="ui-block-b"><a ng-click="store.saveData();" class="ui-btn ui-btn-b ui-icon-action ui-btn-icon-right ui-corner-all">Sauver</a></div>
+				</fieldset>
+			</div>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ MANAGE }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="loadData">
+			<div class="embedded">
+				<h2>Manage data</h2>
+				{{store.data.reports}}
+				<ul id="listview" data-role="listview" data-inset="true">
+					<li data-icon="false" ng-repeat="(uuid,report) in store.reports">
+						<a>
+						<h2>{{uuid}}<div style="float:right; background:#aaa; font-size:12px; color:#fff; padding:3px; min-width:15px; text-align:center; border-radius:5px;"></div></h2>
+						<p><b>{{report}}</b></p>
+						<p style="margin:0px; font-size:11px; padding:3px;">test</p>
+						</a>
+						<a href="" data-position-to="window" data-icon="edit" data-transition="flip"/></a>
+					</li>
+				</ul>
+				<fieldset class="ui-grid-a">
+					<div class="ui-block-a"><a href="index.html" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all ui-btn-b" data-rel="back">Retour</a></div>
+				</fieldset>
+			</div>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ CONSOMMATION }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="consommation">
+			<form class="embedded" name="reviewForm" novalidate>
+				<h1>Consommation</h1>
+
+				<table style="width:100%">
+					<tr>
+						<td width="50%"><label>Numéro de client : </label></td>
+						<td width="50%"><input type="number" ng-change="store.save();" ng-model="store.data.customer.clientnumber" placeholder="Numéro client" maxlength="20" type="text"required></td>
+					</tr>
+					<tr>
+						<td width="50%"><label>Surface chauffée : </label></td>
+						<td width="45%"><input type="number" ng-change="store.save();" ng-model="store.data.home.surface" placeholder="Surface chauffée" maxlength="8" type="text"required></td>
+						<td width="5%" align="center"><b>m²</b></td>
+					</tr>
+					<tr>
+						<td><label>Consommation energétique annuelle : </label></td>
+						<td><input  type="number" ng-change="store.save();" ng-model="store.data.home.consommation" placeholder="Consommation" maxlength="8" type="text" required></td>
+						<td align="center"><b>kWh</b></td>
+					</tr>
+			 	</table>	
+
+				<section ng-if="store.data.energy.label==='fioul'">
+					<h1>Consommation de fioul</h1>
+					<table style="width:100%">
+						<tr>
+							<td width="50%"><label>Nombre de litres : </label></td>
+							<td width="45%"><input type="number" ng-change="store.updateFioul();" ng-model="store.data.fioul.quantity" placeholder="Litres de fioul consommés" maxlength="8" type="text"></td>
+							<td width="5%" align="center"><b>L</b></td>
+						</tr>
+						<tr>
+							<td><label>Prix au litre : </label></td>
+							<td><input type="number" ng-change="store.updateFioul();" ng-model="store.data.fioul.price" placeholder="Par défaut : 0.98" maxlength="8" type="text"></td>
+							<td align="center"><b>€/L</b></td>
+						</tr>
+				 	</table>	
+			 	</section>
+				
+			 	<table id="viewlist">
+					<thead>
+						<td width="25%" align="center"></center></td>
+						<td width="25%" align="center"><h1>Cette année</h1></td>
+						<td width="25%" align="center"><h1>Mensuel</h1></td>
+						<td width="25%" align="center"><h1>Sur 10 ans</h1></td>
+					</thead>
+					<tr style="background:#B2E6FF;">
+						<td align="center"><img ng-src="img/edf-bleu-ciel.png" width="75%"></td>
+						<td align="center"><input type="number" ng-change="store.updateConso('annual')" ng-model="store.data.annual.electricite" placeholder="Annuel" maxlength="8" type="text"></td>
+						<td align="center"><input type="number" ng-change="store.updateConso('monthly')" ng-model="store.data.monthly.electricite" placeholder="Mensuel" maxlength="8" type="text"></td>
+						<td align="center"><span class="number">{{store.data.decennial.electricite | price:0}} €</span></td>
+					</tr>
+					<tr style="background:#EAD6FF;" ng-if="store.data.energy.label==='gaz'">
+						<td align="center"><img src="img/Engie_Logo.png"  width="75%"></td>
+						<td align="center"><input type="number" ng-change="store.updateConso('annual')" ng-model="store.data.annual.gaz" placeholder="Annuel" maxlength="8" type="text"></td>
+						<td align="center"><input type="number" ng-change="store.updateConso('monthly')" ng-model="store.data.monthly.gaz" placeholder="Mensuel" maxlength="8" type="text"></td>
+						<td align="center"><span class="number">{{store.data.decennial.gaz | price:0}} €</span></td>
+					</tr>
+					<tr style="background:#99C2FF;" ng-if="store.data.energy.label==='fioul'">
+						<td align="center"><span style="font-size:30px; font-weight:bold;">Fioul</span></td>
+						<td align="center"><input type="number" ng-change="store.updateConso('annual')" ng-model="store.data.annual.fioul" placeholder="Annuel" maxlength="8" type="text"></td>
+						<td align="center"><input type="number" ng-change="store.updateConso('monthly')" ng-model="store.data.monthly.fioul" placeholder="Mensuel" maxlength="8" type="text"></td>
+						<td align="center"><span class="number">{{store.data.decennial.fioul | price:0}} €</span></td>
+					</tr>
+					<tr style="background:#ccc; height:80px;">
+						<td align="center"><span style="font-size:30px; font-weight:bold;">Total</span></td>
+						<td align="center"><span class="number">{{store.data.annual.total | price:0}} €</span></td>
+						<td align="center"><span class="number">{{store.data.annual.total/10 | price:0}} €</span></td>
+						<td align="center"><span class="number">{{store.data.decennial.total | price:0}} €</span></td>
+					</tr>
+				</table>
+			 	
+				<section>
+					<a href="http://app.conseil-habitation.com/video/augmentation_energies.mp4" target="_blank" class="ui-btn ui-icon-camera ui-btn-icon-left ui-corner-all ui-btn-a ui-btn-inline">Video</a>
+					<p>Selon la CRE, une augmentation de 30% des prix de l'électricité entre 2012 et 2017 est prévisible, soit une augmentation de 6% par an.</p>
+					<p>De 2005 à 2011, le gaz a augmenté de 60% soit une augmentation moyenne de 10% par an (sourse CRE).</p>
+					<p>Le prix du fioul est passé de 37 centimes le litre en 2002 à 97 centimes le litre en 2012, soit une augmentation de 162% en 10 ans. 
+						Ceci équivaut à une augmentation moyenne de 16.2% par an (source CLCV).</p>
+					<p>De 2009 à 2013, le prix des granulés de bois a augmenté de 13% soit 2.6% par an (source CFBL). </p>
+				</section>
+
+				<!--STEP 1-->
+				<fieldset class="ui-grid-a">
+					<div class="ui-block-a"><a ng-click="store.previousHref('consommation')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+					<div class="ui-block-b">
+						<htmldiv ng-hide="step.consommation" content="store.checkFill('consommation')"></htmldiv>
+						<a ng-if="store.data.energy.label=='fioul'" ng-show="step.consommation" ng-click="store.posHref('consommation', 2);" class="ui-btn ui-btn-b ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a>
+						<a ng-if="store.data.energy.label!='fioul'" ng-show="step.consommation" ng-click="store.nextHref('consommation');" class="ui-btn ui-btn-b ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a>
+					</div>
+				</fieldset>
+			</form>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{  COMPTEUR  }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="compteur" ng-keyup="store.save()">
+			<section class="embedded">
+
+
+			<table id="viewlist" ng-if="store.data.energy.label==='gaz'">
+				<thead>
+					<td colspan="4"><h1>Relevé du compteur de GAZ</h1></td>
+				</thead>
+				<thead>
+					<td colspan="4"><center><img src="img/compteur.png" width="50%"></center></td>
+				</thead>
+				<tr>
+					<td align="center" width="25%"></td>
+					<td align="center" width="25%"><h3>Premier relevé</h3></td>
+					<td align="center" width="25%"><h3>Second relevé</h3></td>
+					<td align="center" width="25%"><h3>Différence</h3></td>
+				</tr>
+				<tr style="background:#EAD6FF;">
+					<td align="center"><img src="img/gdf_suez.png" width="75%" style="margin:10px;"></td>
+					<td align="center"><input type="number" ng-model="store.data.compteur.first" placeholder="premier"  maxlength="8" type="text"></td>
+					<td align="center"><input type="number" ng-model="store.data.compteur.second" placeholder="second"  maxlength="8" type="text"></td>
+					<td align="center"><span class="number">{{store.data.compteur.second - store.data.compteur.first}} m³</span></td>
+				</tr>
+				<thead>
+					<td colspan="4"><h1>Consommation quotidienne</h1></td>
+				</thead>
+				<tr style="background:#CCC; height:80px;">
+					<td align="center">Delta [jours]</td>
+					<td align="center"><input type="number" ng-model="store.data.compteur.deltaJ" placeholder="delta jours" maxlength="8" type="text"></td>
+					<td align="center">Consommation</td>
+					<td align="center"><span class="number">{{(store.data.compteur.second - store.data.compteur.first) *10 / store.data.compteur.deltaJ | price:0}} kWh /j</span></td>
+				</tr>
+			</table>
+
+			<table id="viewlist" ng-if="store.data.energy.label==='electricite'">
+				<thead>
+					<td colspan="4"><h1>Relevé du compteur d'Electricité</h1></td>
+				</thead>
+				<thead>
+					<td colspan="4"><center><img src="img/compteur-elec.png" width="30%"></center></td>
+				</thead>
+				<tr>
+					<td align="center" width="25%"></td>
+					<td align="center" width="25%"><h3>Premier relevé</h3></td>
+					<td align="center" width="25%"><h3>Second relevé</h3></td>
+					<td align="center" width="25%"><h3>Différence</h3></td>
+				</tr>
+				<tr style="background:#B2E6FF;">
+					<td align="center"><img src="img/Engie_Logo.png" width="75%" style="margin:10px;"></td>
+					<td align="center"><input type="number" ng-model="store.data.compteur.first" placeholder="premier"  maxlength="8" type="text"></td>
+					<td align="center"><input type="number" ng-model="store.data.compteur.second" placeholder="second"  maxlength="8" type="text"></td>
+					<td align="center"><span class="number">{{store.data.compteur.second - store.data.compteur.first}} kWh</span></td>
+				</tr>
+				<thead>
+					<td colspan="4"><h1>Consommation quotidienne</h1></td>
+				</thead>
+				<tr style="background:#CCC; height:80px;">
+					<td align="center">Delta [jours]</td>
+					<td align="center"><input type="number" ng-model="store.data.compteur.deltaJ" placeholder="delta jours" maxlength="8" type="text"></td>
+					<td align="center">Consommation</td>
+					<td align="center"><span class="number">{{(store.data.compteur.second - store.data.compteur.first) / store.data.compteur.deltaJ | price:0}} kWh /j</span></td>
+				</tr>
+			</table>
+
+			<!-- STEP 3 -->
+            <fieldset class="ui-grid-a">
+				<div class="ui-block-a"><a ng-click="store.previousHref('compteur')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+				<div class="ui-block-b">
+					<a ng-hide="(store.data.compteur.second - store.data.compteur.first) *10 / store.data.compteur.deltaJ > 50" ng-click="store.nextHref('compteur')" ng-click="store.updateBill()"  class="ui-btn ui-icon-arrow-r ui-btn-icon-right ui-corner-all ui-btn-b">Continuer</a>
+					<a ng-show="(store.data.compteur.second - store.data.compteur.first) *10 / store.data.compteur.deltaJ > 50" id="clignote" ng-click="store.nextHref('compteur')" ng-click="store.updateBill()"  class="ui-btn ui-icon-arrow-r ui-btn-icon-right ui-corner-all ui-btn-b">Consommation a vérifier</a>
+				</div>
+			</fieldset>
+			</section>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ QUESTIONNAIRE }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="questionnaire">
+			<section class="embedded">
+			<!-- HABITATION -->
+			<h1>Informations pratiques</h1>
+			<h2>Votre famille</h2>
+			<table style="width:100%">
+				<tr>
+					<td width="50%"><label>Nombre d'adultes</label></td>
+		 			<td width="50%">
+			 			<select ng-change="store.updateBill()" ng-model="store.data.family.adults" required>
+			 				<option value="">{{store.default.option}}</option>
+							<option ng-repeat="val in [1,2,3,4,5,6]">{{val}}</option>
+						</select>
+					</td>	
+		 		</tr>
+				<tr>
+					<td width="50%"><label>Nombre d'enfants</label></td>
+		 			<td width="50%">
+						<select ng-change="store.updateBill()" ng-model="store.data.family.children" required>
+							<option value="">{{store.default.option}}</option>
+							<option ng-repeat="val in [0,1,2,3,4,5,6,7,8]">{{val}}</option>
+						</select>
+		 			</td>	
+		 		</tr>
+				<tr ng-if="annual.heater<=0 || annual.hotwater<=0 || annual.consommation<=0">
+					<td width="50%"></td>
+		 			<td width="50%">
+					    <div style="background:#FC0;" class="ui-body ui-body-a ui-corner-all">
+							La consommation semble <b>trop faible</b> par rapport au nombre d'habitants. Veuillez vérifier la consommation encodée.
+						</div>
+		 			</td>	
+		 		</tr>
+			</section>
+		 	</table>	
+
+			<h1>Chauffage principale ({{store.data.energy.name}})</h1>
+			<table style="width:100%">
+				<tr>
+					<td width="50%"><label>Quelle est votre installation ? </label></td>
+					<td width="50%">
+						<select ng-change="store.resetSolutions()" ng-model="store.data.chauffage.installation" required>
+							<option value="">{{store.default.option}}</option>
+							<option ng-if="store.data.energy.label=='gaz'" ng-repeat="product in ['chaudiere_condensation', 'chaudiere_classique', 'convecteur_gaz']" ng-value="{{product}}">
+								{{store.labels[product]}}
+							</option>
+							<option ng-if="store.data.energy.label=='electricite'" ng-repeat="product in ['grille_pain', 'radiateur_inertie', 'pac_air_air', 'pac_air_eau']" ng-value="{{product}}">
+								{{store.labels[product]}}
+							</option>
+							<option ng-if="store.data.energy.label=='fioul'" ng-repeat="product in ['chaudiere_condensation', 'chaudiere_classique', 'convecteur_fioul']" ng-value="{{product}}">
+								{{store.labels[product]}}
+							</option>
+						</select>
+					</td>
+				</tr>
+				<tr ng-if="store.data.chauffage.installation==store.labels['chaudiere_condensation']">
+					<td width="50%"><label>En êtes-vous content ? </label></td>
+					<td width="50%" align="right">
+						<select ng-change="store.resetSolutions()" ng-model="store.data.chauffage.satisfaction" required>
+							<option value="">{{store.default.option}}</option>
+							<option value="1">Oui</option>
+							<option value="0">Non</option>
+						</select>
+					</td>
+				</tr>
+				<tr ng-if="store.data.energy.label=='gaz'" ng-show="(store.data.chauffage.installation==store.labels['chaudiere_condensation'] && store.data.chauffage.satisfaction=='0') || store.data.chauffage.installation==store.labels['chaudiere_classique']">
+					<td><label>Est-il possible d'installer une chaudière hybride ? </label></td>
+					<td align="right">
+						<select ng-change="store.resetSolutions()" ng-model="store.data.chauffage.hybride_possible" required>
+							<option value="">{{store.default.option}}</option>
+							<option value="1">Oui</option>
+							<option value="0">Non</option>
+						</select>
+					</td>
+				</tr>
+				<tr ng-if="store.data.energy.label=='gaz'" ng-show="(store.data.chauffage.installation==store.labels['chaudiere_condensation'] && store.data.chauffage.satisfaction=='0') || store.data.chauffage.installation==store.labels['chaudiere_classique']">
+					<td><label>Est-il possible d'installer une chaudière pulsatoire ? </label></td>
+					<td align="right">
+						<select ng-change="store.resetSolutions()" ng-model="store.data.chauffage.pulsatoire_possible" required>
+							<option value="">{{store.default.option}}</option>
+							<option value="1">Oui</option>
+							<option value="0">Non</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td><label>En cas de panne ou de changement, à qui feriez-vous appel ? </label></td>
+					<td align="right">
+						<select ng-change="store.resetSolutions()" ng-model="store.data.chauffage.installateur" required>
+							<option value="">{{store.default.option}}</option>
+							<option value="1">Ne sais pas</option>
+							<option value="0">Une bonne connaissance</option>
+						</select>
+					</td>
+				</tr>
+				<tr ng-if="store.data.energy.label=='gaz'" ng-hide="store.data.chauffage.installation==store.labels['convecteur_gaz'] ">
+					<td><label>Auriez-vous aimé contrôler la température pièce par pièce ? </label></td>
+					<td align="right">
+						<select ng-change="store.resetSolutions()" ng-model="store.data.chauffage.domotique" required>
+							<option value="">{{store.default.option}}</option>
+							<option value="1">Oui</option>
+							<option value="0">Non</option>
+						</select>
+					</td>
+				</tr>
+				<tr ng-show="store.data.chauffage.installation==store.labels['pac_air_eau']">
+					<td><label>Auriez-vous aimé contrôler la température pièce par pièce ? </label></td>
+					<td align="right">
+						<select ng-change="store.resetSolutions()" ng-model="store.data.chauffage.domotique" required>
+							<option value="">{{store.default.option}}</option>
+							<option value="1">Oui</option>
+							<option value="0">Non</option>
+						</select>
+					</td>
+				</tr>
+			</table>
+
+			<!-- CHAUFFAGE d'APPOINT -->
+			<h1>Chauffage d'appoint</h1>
+			<table style="width:100%">
+				<tr>
+					<td width="50%"><label>Avez-vous un chauffage d'appoint ?</label></td>
+					<td width="50%" align="right">
+						<select ng-change="store.resetSolutions()" ng-model="store.data.chauffage.appoint" required>
+							<option value="">{{store.default.option}}</option>
+							<option value="0">Oui, Feu à pétrole</option>
+							<option value="0">Oui, Poèle/insert à granulés</option>
+							<option value="0">Oui, Poèle/insert à bois</option>
+							<option value="0">Oui, radiateur électrique</option>
+							<option value="0">Non</option>
+							<option value="1">Non, mais aurait aimé</option>
+						</select>
+					</td>
+				</tr>
+				<tr ng-if="store.data.chauffage.appoint=='1'">
+					<td width="50%"><label>Avez-vous une cheminée existante ?</label></td>
+					<td width="50%" align="right">
+						<select ng-change="store.resetSolutions()" ng-model="store.data.chauffage.cheminee" required>
+							<option value="">{{store.default.option}}</option>
+							<option value="1">Oui</option>
+							<option value="0">Non</option>
+						</select>
+					</td>
+				</tr>
+			</table>
+
+			<!-- EAU CHAUDE SANITAIRE -->
+			<section  ng-hide="store.data.chauffage.installateur=='0'">
+			<h1>Eau chaude sanitaire</h1>
+			<table style="width:100%">
+				<tr>
+					<td width="50%">L'eau chaude est produite par ?</td>
+					<td width="50%">
+						<select ng-change="store.updateBill(); store.resetSolutions()" ng-model="store.data.ecs.installation" required>
+							<option value="">{{store.default.option}}</option>
+							<option ng-if="store.data.energy.label=='gaz' || store.data.energy.label=='fioul'" ng-repeat="product in ['chaudiere_classique', 'cumulus', 'ballon_thermodynamique']" ng-value="{{product}}">{{store.labels[product]}}</option>
+							<option ng-if="store.data.energy.label=='electricite'" ng-repeat="product in ['cumulus', 'ballon_thermodynamique']" ng-value="{{product}}">{{store.labels[product]}}</option>
+						</select>
+					</td>
+				</tr>
+				<tr ng-if="annual.consommation<=0">
+					<td width="50%"></td>
+		 			<td width="50%">
+					    <div style="background:#FC0;" class="ui-body ui-body-a ui-corner-all">
+							La consommation semble <b>trop faible</b> par rapport au nombre d'habitants et par rapport à l'installation qui produit l'eau chaude. Veuillez vérifier la consommation encodée ou l'installation choisie.
+						</div>
+		 			</td>	
+		 		</tr>
+				<tr ng-if="store.data.ecs.installation==store.labels['cumulus'] || store.data.ecs.installation==store.labels['chaudiere_classique']">
+					<td width="50%">Est-il possible d'installer un ballon thermodynamique ?</td>
+					<td width="50%">
+						<select ng-change="store.resetSolutions()" ng-model="store.data.ecs.thermodynamique_possible" required>
+							<option value="">{{store.default.option}}</option>
+							<option value="1">Oui</option>
+							<option value="0">Non</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td width="50%">Avez-vous des problèmes de calcaire ?</td>
+					<td width="50%">
+						<select ng-change="store.resetSolutions()" ng-model="store.data.ecs.probleme_calcaire" required>
+							<option value="">{{store.default.option}}</option>
+							<option value="1">Oui</option>
+							<option value="0">Non</option>
+						</select>
+					</td>
+				</tr>
+			</table>
+			</section>
+
+			<!-- ISOLATION -->
+			<h1>Isolation</h1>
+			<table style="width:100%">
+				<tr>
+					<td width="50%">Façade exposée au nord ?</td>
+					<td width="50%">
+						<select ng-change="store.resetSolutions()" ng-model="store.data.isolation.facade_nord" required>
+							<option value="">{{store.default.option}}</option>
+							<option value="0">Non</option>
+							<option value="1">Oui</option>
+						</select>
+					</td>
+				</tr>
+				<tr ng-if="store.data.isolation.facade_nord=='1'">
+					<td>Ressentez-vous le froid ?</td>
+					<td>
+						<select ng-change="store.resetSolutions()" ng-model="store.data.isolation.facade" required>
+							<option value="">{{store.default.option}}</option>
+							<option value="0">Non</option>
+							<option value="1">Oui</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td>Quel est l'état de la porte d'entrée : </td>
+					<td>
+						<select ng-change="store.resetSolutions()" ng-model="store.data.isolation.porte" required>
+							<option value="">{{store.default.option}}</option>
+							<option value="0">Bon</option>
+							<option value="1">Moyen</option>
+							<option value="1">Mauvais</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td>Avez-vous des fenêtres à changer ?</td>
+					<td>
+						<select ng-change="store.resetSolutions()" ng-model="store.data.isolation.vitrage" required>
+							<option value="">{{store.default.option}}</option>
+							<option value="0">Non</option>
+							<option value="1">Oui</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td>Quel est l'état de la toiture : </td>
+					<td>
+						<select ng-change="store.resetSolutions()" ng-model="store.data.isolation.toiture" required>
+							<option value="">{{store.default.option}}</option>
+							<option value="0">Bon</option>
+							<option value="1">Moyen</option>
+							<option value="1">Mauvais</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td>Vos combles sont : </td>
+					<td>
+						<select ng-change="store.resetSolutions()" ng-model="store.data.isolation.combles" required>
+							<option value="">{{store.default.option}}</option>
+							<option value="0">Pas de combles</option>
+							<option value="1">Aménagées non isolées</option>
+							<option value="0">Aménagées isolées</option>
+							<option value="2">Perdues non isolées</option>
+							<option value="0">Perdues isolées</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td>Avez-vous des problèmes d'humidité ? </td>
+
+					<td>
+						<select ng-change="store.resetSolutions()" ng-model="store.data.isolation.humidite" required>
+							<option value="">{{store.default.option}}</option>
+							<option value="0">Non</option>
+							<option value="1">Oui</option>
+						</select>
+					</td>
+				</tr>
+				<tr ng-if="store.data.isolation.humidite=='1'">
+					<td>Est-ce des remontées capillaires ? </td>
+					<td>
+						<select ng-change="store.resetSolutions()" ng-model="store.data.isolation.cappilarite" required>
+							<option value="">{{store.default.option}}</option>
+							<option value="0">Non</option>
+							<option value="1">Oui</option>
+						</select>
+					</td>
+				</tr>
+			</table>
+          		
+			<!--STEP 5-->
+			<hr>
+			<fieldset class="ui-grid-a">
+				<div class="ui-block-a">
+					<a ng-if="store.data.energy.label!='fioul'" ng-click="store.previousHref('questionnaire')" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-corner-all">Retour</a>
+					<a ng-if="store.data.energy.label=='fioul'" ng-click="store.posHref('questionnaire', -2)" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-corner-all">Retour</a>
+				</div>
+				<div class="ui-block-b" ng-show="step.questionnaire">
+					<a ng-click="store.nextHref('questionnaire'); store.compute();" class="ui-btn ui-icon-arrow-r ui-btn-icon-right ui-corner-all ui-btn-b">Continuer</a>
+				</div>
+				<div class="ui-block-b" ng-hide="step.questionnaire">
+					<htmldiv content="store.checkFill('questionnaire')"></htmldiv>
+				</div>
+			</fieldset>
+			</section>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ CLASS NRJ }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="class_energy">
+			<section class="embedded">
+			<h1>Classe énergétique</h1>
+			<table id="viewlist">
+				<tr>
+					<td align="left" width="50%" align="center" style="vertical-align:top;">
+						<p>Consommation totale annuelle : </p>
+						<br>
+						<p><center><span class="number">{{store.data.home.consommation}} kWh /an</span></center></p>
+						<br>
+						<p>Consommation totale annuelle surfacique : </p>
+						<br>
+						<p><center><span class="number">{{store.data.home.consommation/store.data.home.surface  | rounded}} kWh/m² /an</span></center></p>
+						<br>
+						<p>Votre classe de consommation : </p>
+						<br>
+						<div><center><htmldiv content="store.energyClass()"></htmldiv></center></div>
+					</td>
+					<td width="50%" align="center"><img src="img/consommation2.png" width="75%"></td>
+				</tr>
+			</table>
+			<!--STEP 6-->
+			<fieldset class="ui-grid-a">
+				<div class="ui-block-a"><a ng-click="store.previousHref('class_energy');" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+				<div class="ui-block-b"><a ng-click="store.nextHref('class_energy');" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a></div>
+			</fieldset>
+			</section>
+		</div>
+
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ TAXECO2 }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="taxeco2" ng-keyup="store.save()">
+			<section class="embedded">
+			<a style="text-decoration:none;" href="#popup_video_taxe_carbone" data-rel="popup" data-position-to="window" data-transition="fade"><h1>Taxe CO<sub>2</sub></h1></a>
+
+			<div data-role="popup" id="popup_video_taxe_carbone" data-theme="a">
+<!--					<a id="close" href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>-->
+
+				<div data-role="header" data-theme="a"><h1>Taxe Carbone</h1></div>
+				<ng-video id="popup_video_taxe_carbone-screen" url="video/taxe_carbone.mp4" height="600" width="800"></ng-video>
+			</div>
+
+		 	<table id="viewlist">
+				<thead>
+					<td width="25%" align="center"></center></td>
+					<td width="25%" align="center"><h3>Annuel</h3></td>
+					<td width="25%" align="center"><h3>Mensuel</h3></td>
+					<td width="25%" align="center"><h3>Sur 10 ans</h3></td>
+				</thead>
+				<tr style="background:#B2E6FF;">
+					<td><center><img src="img/edf-bleu-ciel.png" width="75%"></center></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.electricite / 10 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.decennial.electricite | price:0}} €</span></td>
+				</tr>
+				<tr style="background:#EAD6FF;" ng-if="store.data.energy.label==='gaz'">
+					<td><center><img src="img/Engie_Logo.png"  width="75%"></center></td>
+					<td align="center"><span class="number">{{store.data.annual.gaz | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.gaz / 10| price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.decennial.gaz | price:0}} €</span></td>
+				</tr>
+				<tr style="background:#99C2FF;" ng-if="store.data.energy.label==='fioul'">
+					<td><center><h1>Fioul</h1></center></td>
+					<td align="center"><span class="number">{{store.data.annual.fioul | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.fioul / 10 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.decennial.fioul | price:0}} €</span></td>
+				</tr>
+				<tr style="background-color:#E6CC80; height:80px;">
+					<td><center><span style="font-size:30px; font-weight:bold;">Taxe CO<sub>2</sub></span></center></td>
+					<td align="center"><span class="number">{{store.data.annual.co2 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.annual.co2 / 10 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.decennial.co2 | price:0}} €</span></td>
+				</tr>
+				<tr style="background:#ccc; height:80px;">
+					<td><center><span style="font-size:30px; font-weight:bold;">Total</span></center></td>
+					<td align="center"><span class="number">{{store.data.annual.total + store.data.annual.co2 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{(store.data.annual.total + store.data.annual.co2) / 10 | price:0}} €</span></td>
+					<td align="center"><span class="number">{{store.data.decennial.total + store.data.decennial.co2 | price:0}} €</span></td>
+				</tr>
+			</table>
+
+			<a href="#popup_video_taxe_carbone" data-rel="popup" data-position-to="window" data-transition="fade" class="ui-btn ui-icon-camera ui-btn-icon-left ui-corner-all ui-btn-a ui-btn-inline">Video sur la taxe CO<sub>2</sub></a>
+	
+			<section>
+				<p>Selon la CRE, une augmentation de 30% des prix de l'électricité entre 2012 et 2017 est prévisible, soit une augmentation de 6% par an.</p>
+				<p>De 2005 à 2011, le gaz a augmenté de 60% soit une augmentation moyenne de 10% par an (sourse CRE).</p>
+				<p>Le prix du fioul est passé de 37 centimes le litre en 2002 à 97 centimes le litre en 2012, soit une augmentation de 162% en 10 ans. 
+					Ceci équivaut à une augmentation moyenne de 16.2% par an (source CLCV).</p>
+				<p>De 2009 à 2013, le prix des granulés de bois a augmenté de 13% soit 2.6% par an (source CFBL). </p>
+			</section>
+
+			<!--STEP 7-->
+			<fieldset class="ui-grid-a">
+				<div class="ui-block-a"><a ng-click="store.previousHref('taxeco2')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+				<div class="ui-block-b">
+					<a ng-click="store.nextHref('taxeco2')" class="ui-btn ui-btn-b ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a>
+				</div>
+			</fieldset>
+			</section>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ WHT GDF }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="why_gdf" ng-keyup="store.save()">
+			<section class="embedded">
+				<h1>En quoi ENGIE veut nous inciter à diminuer notre consommation ?</h1>
+				<center><ng-video url="video/why_gdf.mp4" height="600" width="800"></ng-video></center>
+				<!--STEP 8-->
+				<fieldset class="ui-grid-a">
+					<div class="ui-block-a"><a ng-click="store.previousHref('why_gdf')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+					<div class="ui-block-b"><a ng-click="store.nextHref('why_gdf')" class="ui-btn ui-btn-b ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a></div>
+				</fieldset>
+			</section>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ BECAUSE GDF }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="because_gdf" ng-keyup="store.save()">
+			<section class="embedded">
+				<h1>Gains d'énergie pour ENGIE ?</h1>
+				<table id="viewlist">
+					<tr>
+						<td width="25%" align="center"><img class="vignette" src="img/solutions/isolation_exterieur.png" width="75%"></td>
+						<td width="25%" align="center"><img class="vignette" src="img/solutions/isolation_combles.png" width="75%"></td>
+						<td width="25%" align="center"><img class="vignette" src="img/solutions/renovation_fenetre.png" width="75%"></td>
+						<td width="25%" align="center"><img class="vignette" src="img/solutions/poele_granules.png" width="75%"></td>
+					</tr>
+					<tr>
+						<td width="25%" align="center"><span class="number">380.000 kWh</span></td>
+						<td width="25%" align="center"><span class="number">230.000 kWh</span></td>
+						<td width="25%" align="center"><span class="number">6.700 kWh</span></td>
+						<td width="25%" align="center"><span class="number">29.000 kWh</span></td>
+					</tr>
+					<tr>
+						<td width="25%" align="center"><img class="vignette" src="img/solutions/ballon_thermodynamique.png" width="75%"></td>
+						<td width="25%" align="center"><img class="vignette" src="img/solutions/chaudiere_granules.png" width="75%"></td>
+						<td width="25%" align="center"><img class="vignette" src="img/solutions/pac_air_eau.png" width="75%"></td>
+						<td width="25%" align="center"><img class="vignette" src="img/solutions/chaudiere_condensation.png" width="75%"></td>
+					</tr>
+					<tr>
+						<td width="25%" align="center"><span class="number">21.000 kWh</span></td>
+						<td width="25%" align="center"><span class="number">142.000 kWh</span></td>
+						<td width="25%" align="center"><span class="number">114.000 kWh</span></td>
+						<td width="25%" align="center"><span class="number">76.000 kWh</span></td>
+					</tr>
+				</table>
+				<!--STEP 9-->
+				<fieldset class="ui-grid-a">
+					<div class="ui-block-a"><a ng-click="store.previousHref('because_gdf')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+					<div class="ui-block-b"><a ng-click="store.nextHref('because_gdf')" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a></div>
+				</fieldset>	
+			</section>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ ADVANTAGES  }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="avantages" ng-keyup="store.save()">
+			<section class="embedded">
+				<h1>Avantages</h1>
+				<table id="viewlist">
+					<tr>
+						<td width="50%" align="center"><h3>Améliorer la classe énergétique</h3></td>
+						<td width="50%" align="center"><h3>Eviter la taxe carbone</h3></td>
+					</tr>
+					<tr>
+						<td width="50%" align="center"><img src="img/ameliere_class_energy.png" width="75%"></td>
+						<td width="50%" align="center"><img src="img/eviter_taxe_co2.png" width="75%"></td>
+					</tr>
+					<tr>
+						<td width="50%" align="center"><h3>Diminuer sa facture de chauffage</h3></td>
+						<td width="50%" align="center"><h3>S'équiper sans effort financier</h3></td>
+					</tr>
+					<tr>
+						<td width="50%" align="center"><img src="img/diminuer_facture_chauffage.png" width="75%"></td>
+						<td width="50%" align="center"><img src="img/equiper_sans_financement.png" width="75%"></td>
+					</tr>
+				</table>
+
+				<!--STEP 10-->
+				<fieldset class="ui-grid-a">
+					<div class="ui-block-a"><a ng-click="store.previousHref('avantages')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+					<div class="ui-block-b"><a ng-click="store.nextHref('avantages')" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a></div>
+				</fieldset>
+			</section>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ EXEMPLES VOITURES }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="simulation" ng-keyup="store.save()">
+			<section class="embedded">
+				<h1>Simulation</h1>
+				<table id="viewlist">
+					<tr>
+						<td width="40%" colspan="2" align="center"><h3>Voiture classique</h3></td>
+						<td width="20%" colspan="1" align="center"></td>
+						<td width="40%" colspan="2" align="center"><h3>Voiture hybride</h3></td>
+					</tr>
+					<tr>
+						<td colspan="2"><img src="img/voiture.png" width="75%"></td>
+						<td colspan="1"></td>
+						<td colspan="2"><img src="img/voiture_hybride.png" width="75%"></td>
+					</tr>
+					<tr style="height:80px;">
+						<td width="20%" align="center">Consommation mensuelle</td>
+						<td width="20%" align="center"><input ng-model="store.data.conso1" placeholder="Normale"  maxlength="8" type="number"></td>
+						<td width="20%" align="center"><span class="number" style="background:#b3ffcc;">{{store.data.conso1 - store.data.conso2 | price:0}} €</span></td>
+						<td width="20%" align="center"><span class="number" style="background:#FF9;">{{store.data.conso1 / 2 | price:0}} €</span></td>
+						<td width="20%" align="center">Consommation mensuelle</td>
+					</tr>
+					<tr style="height:80px;">
+						<td width="20%" align="center">Consommation sur 5 ans</td>
+						<td width="20%" align="center"><span class="number" style="background:#FF9;">{{store.data.conso1*73.2612 | price:0}} €</span></td>
+						<td width="20%" align="center"><span class="number" style="background:#b3ffcc;">{{(store.data.conso1 / 2)*73.2612 | price:0}} €</span></td>
+						<td width="20%" align="center"><span class="number" style="background:#FF9;">{{store.data.conso1/2*73.2612 | price:0}} €</span></td>
+						<td width="20%" align="center">Consommation sur 5 ans</td>
+					</tr>	
+				</table>
+				<hr>
+				<table id="viewlist">
+
+					<tr style="height:80px;">
+						<td width="20%" align="center">Consommation mensuelle</td>
+						<td width="20%" align="center"><span class="number" style="background:#FF9;">{{store.data.conso1 | price:0}} €</span></td>
+						<td width="20%" align="center"></td>
+						<td width="20%" align="center"><span class="number" style="background:#FF9;">{{store.data.conso1 / 2 | price:0}} €</span></td>
+						<td width="20%" align="center">Consommation mensuelle</td>
+					</tr>
+					<tr style="height:80px;">
+						<td width="20%" align="center"></td>
+						<td width="20%" align="center"></td>
+						<td width="20%" align="center"></td>
+						<td width="20%" align="center"><span class="number" style="background:#FF9;">{{store.data.conso1 / 2 + 20| price:0}} €</span></td>
+						<td width="20%" align="center">Financement sur 5 ans</td>
+					</tr>
+					<tr style="height:80px;">
+						<td width="20%" align="center"></td>
+						<td width="20%" align="center"></td>
+						<td width="20%" align="center"><span class="number" style="background:#6ff;">{{20 | price:0}} €</span></td>
+						<td width="20%" align="center"><span class="number" style="background:#FF9;">{{store.data.conso1 + 20 | price:0}} €</span></td>
+						<td width="20%" align="center"></td>
+					</tr>
+					<tr style="height:80px;">
+						<td width="20%" align="center"></td>
+						<td width="20%" align="center"></td>
+						<td width="20%" align="center"><span class="number" style="background:#6ff;">{{20 * 60 | price:0}} €</span></td>
+						<td width="20%" align="center"></td>
+						<td width="20%" align="center"></td>
+					</tr>
+					<tr style="height:80px;">
+						<td width="20%" align="center"></td>
+						<td width="20%" align="center"></td>
+						<td width="20%" align="center">Investissement sur 5 ans</td>
+						<td width="20%" align="center"></td>
+						<td width="20%" align="center"></td>
+					</tr>
+					</tr>
+				</table>
+				<!--STEP 11-->
+				<fieldset class="ui-grid-a">
+					<div class="ui-block-a"><a ng-click="store.previousHref('simulation')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+					<div class="ui-block-b"><a ng-click="store.nextHref('simulation')" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a></div>
+				</fieldset>
+			</section>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ CHOOSE SOLUTIONS  }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="solutions">
+	
+			<section class="embedded">
+			<h1>Solutions 
+				<div style="float:right;">
+					<a ng-click="store.setValue('showItems','bars')" class="ui-btn ui-btn-inline ui-icon-bars ui-btn-icon-notext">Icon only</a>
+					<a ng-click="store.setValue('showItems','grid')" class="ui-btn ui-btn-inline ui-icon-grid ui-btn-icon-notext">Icon only</a>
+				</div>
+			</h1>
+
+			<section ng-show="store.data.total_products_visible>0">
+			<ul style="padding:0;">
+				<li ng-repeat="product in store.data.products" ng-if="product.visible" ng-class="{itemsGrid : store.data.showItems=='grid', itemsBars : store.data.showItems=='bars'}"> 
+<!--					<a href="#popup_video_{{product.img}}" data-rel="popup" data-position-to="window" data-transition="fade">-->
+					<a href="http://app.conseil-habitation.com/video/{{product.img}}.mp4" target="_blank"> 
+						<img class="image" ng-src="img/solutions/{{product.img}}.png">
+					</a>
+					<div class="infos">
+<!--						<h3 style="margin:0;">{{product.label}}</h3>-->
+<!--						<div>-->
+<!--						<h4 style="margin:0;">Gains [{{product.red_cha*100 | rounded:0}}% | {{product.red_ecs*100 | rounded:0}}%]</h4>-->
+<!--						{{product.gains | price:0}} € / an<br>-->
+<!--						{{ makeCumulus(product.gains, '1.08') | price:0}} € / 10 ans-->
+<!--						</div>-->
+						<label style="background:#FF9; border-radius:5px; padding:5px; text-align:center;">{{product.gains | price:0}} € / an</label>
+						<label style="background:#b3ffcc; border-radius:5px; padding:5px; text-align:center;">{{ makeCumulus(product.gains, store.coefCumulus[store.data.energy.label]) | price:0}} € / 10 ans</label>
+						<label><input type="checkbox" ng-change="store.updateCart()" ng-model="product.checked"/>Choisir ce produit</label>
+					</div>
+				</li>
+			</ul>
+
+			<section ng-if="store.data.total_products_checked>0">
+			<h1>Vos gains</h1>
+
+			<table id="viewlist">
+				<thead>
+					<td width="50%" align="center"><h3>Système actuel</h3></td>
+					<td width="50%" align="center"><h3>Nouvelle solution</h3></td>
+				</thead>
+				<tr style="background:#ccc; height:70px;">
+					<td><center><span class="number">{{annual.current_solution | price:0}} €</span></center></td>
+					<td><center><span class="number">{{annual.future_solution_checked | price:0}} €</span></center></td>
+				</tr>
+				<tr style="background:#ccc; height:70px;">
+					<td align="right"><a href="#explicatif" data-transition="slideup"><img src="img/cochon.png" style="width:100px;"></a></td>
+					<td align="left"><span class="number" style="background:#ffff99;">{{annual.current_solution - annual.future_solution_checked | price:0}} € </span></td>
+				</tr>
+				<thead>
+					<td align="center"><h3>Système actuel sur 10 ans</h3></td>
+					<td align="center"><h3>Nouvelle solution sur 10 ans</h3></td>
+				</thead>
+				<tr style="background:#ccc; height:70px;">
+					<td><center><span class="number">{{store.data.decennial.current_solution | price:0}} €</span></center></td>
+					<td><center><span class="number">{{store.data.decennial.future_solution_checked | price:0}} €</span></center></td>
+				</tr>
+				<tr style="background:#ccc; height:70px;">
+					<td align="right"><a href="#explicatif_checked" data-transition="slideup"><img src="img/cochon.png" style="width:100px;"></a></td>
+					<td align="left"><span class="number" style="background:#b3ffcc;">{{store.data.decennial.current_solution - store.data.decennial.future_solution_checked | price:0}} € </span></td>
+				</tr>
+			</table>
+
+    		<h1>Amélioration de la classe énergétique</h1>
+			<table id="viewlist">
+				<thead>
+					<td width="50%" align="center"><h3>Système actuel</h3></td>
+					<td width="50%" align="center"><h3>Nouvelle solution</h3></td>
+				</thead>
+				<tr style="background:#ccc;">
+					<td align="center"><htmldiv content="store.energyClass()";></htmldiv></td>
+					<td align="center"><htmldiv content="store.energyClass(1-annual.reduction_peb_checked/100);"></htmldiv></td>
+				</tr>
+				<tr style="height:70px;">
+					<td align="center"><span class="number">{{store.data.home.consommation/store.data.home.surface | rounded:0}} kWh /m² /an</span></td>
+					<td align="center"><span class="number">{{store.data.home.consommation/store.data.home.surface * (1-annual.reduction_peb_checked/100) | rounded:0}} kWh /m² /an</span></td>
+				</tr>
+				<tr style="height:70px;">
+					<td colspan="2" align="center">
+						<div style="width:30%; padding:5px; border-radius:5px; background:#FC0;">
+						Valorisation immobilière</br>
+						<b style="font-size:36px;">{{annual.reduction_peb_checked * store.data.home.consommation / store.data.home.surface /1000 |rounded:1}} %</b>
+						</div>
+					</td>
+				</tr>
+			</table>
+
+			</section> 
+			<!-- endif store.data.total_products_checked>0-->
+
+			</section>
+			<!-- endif store.data.total_products_visible>0-->
+
+			<section ng-hide="store.data.total_products_visible>0">
+				Il n'y a aucun produit disponible par rapport aux informations entrée dans le questionnaire. Veuillez vérifier vos réponses. 
+			</section>
+
+			<!--STEP 12-->
+			<fieldset class="ui-grid-a">
+				<div class="ui-block-a"><a ng-click="store.previousHref('solutions')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all ui-btn-b">Retour</a></div>
+				<div class="ui-block-b" ng-show="step.solutions">
+					<a ng-click="store.nextHref('solutions'); store.updateCart();" class="ui-btn ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a>
+				</div>
+				<div class="ui-block-b" ng-hide="step.solutions"><htmldiv content="store.checkFill('solutions')"></htmldiv></div>
+			</fieldset>
+
+			</section>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ PARAMETRES }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<!-- POELES GRANULES -->
+		<div data-role="page" id="popup_poele" data-theme="a" ng-init="poele_granules = store.isProduct('poele_granules').items">
+			<form class="embedded">
+				<h1>Poêles à granulés</h1>
+				<div ng-repeat="item in poele_granules track by $index">
+					<h3>Poêle {{$index+1}}</h3>
+					<div ng-class="{validbgd:item.check}" class="itemsBars">
+					<table width="100%">
+						<tr>
+							<td width="40%" align="center"><img src="img/solutions/poele_granules.png"  style="width:80%; height:250px; border-radius:10px; width:50%; max-width:150px;"></td>
+							<td width="60%">
+								Modèle : 
+								<select ng-model="item.type" ng-change="store.checkItem('poele_granules')">
+									<option ng-repeat="type in store.catalog.poele">{{type.name}}</option>
+								</select>
+								Room : 
+								<select ng-model="item.room" ng-change="store.checkItem('poele_granules')">
+									<option ng-repeat="room in store.rooms">{{room}}</option>
+								</select>
+								Etage : 
+								<select ng-model="item.floor" ng-change="store.checkItem('poele_granules')">
+									<option ng-repeat="floor in [0,1,2,3,4]">{{floor}}</option>
+								</select>
+								Actions : 
+								<button data-icon="delete" ng-click="store.deleteItem('poele_granules', $index);">Supprimer</button>
+							</td>
+						</tr>
+					</table>
+					</div>
+				</div>
+				<button ng-click="store.addItem(poele_granules);">Ajouter un objet</button>
+				<!--STEP-->
+				<fieldset class="ui-grid-a">
+					<div class="ui-block-a"><a ng-click="store.previousHref('popup_poele')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+					<div class="ui-block-b"><a ng-click="store.nextHref('popup_poele'); store.updateCart();" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a></div>
+				</fieldset>
+			</form>
+		</div>
+		<!-- RADIATEUR INERTIE -->
+		<div data-role="page" id="popup_radiateur_inertie" data-theme="a" ng-init="radiateurs_inertie = store.isProduct('radiateur_inertie').items">
+			<form class="embedded">
+				<h1>Radiateurs à inertie</h1>
+				<div ng-repeat="item in radiateurs_inertie track by $index">
+					<h3>Radiateur {{$index+1}}</h3>
+					<div ng-class="{validbgd:item.check}" class="itemsBars">
+					<table width="100%">
+						<tr>
+							<td width="40%" align="center"><img src="img/solutions/radiateur_inertie.png"  style="width:80%; height:250px; border-radius:10px; width:50%; max-width:150px;"></td>
+							<td width="60%">
+								Room : 
+								<select ng-model="item.room" ng-change="store.checkItem('radiateur_inertie')">
+									<option ng-repeat="room in store.rooms">{{room}}</option>
+								</select>
+								Etage : 
+								<select ng-model="item.floor" ng-change="store.checkItem('radiateur_inertie')">
+									<option ng-repeat="floor in [0,1,2,3,4]">{{floor}}</option>
+								</select>
+								Actions : 
+								<button data-icon="delete" ng-click="store.deleteItem('radiateur_inertie', $index);">Supprimer</button>
+							</td>
+						</tr>
+					</table>
+					</div>
+				</div>
+				<button ng-click="store.addItem(radiateurs_inertie);">Ajouter un objet</button>
+				<!--STEP-->
+				<fieldset class="ui-grid-a">
+					<div class="ui-block-a"><a ng-click="store.previousHref('popup_radiateur_inertie')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+					<div class="ui-block-b"><a ng-click="store.nextHref('popup_radiateur_inertie'); store.updateCart();" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a></div>
+				</fieldset>
+			</form>
+		</div>
+		<!-- FENETRES -->
+		<div data-role="page" id="popup_fenetre" data-theme="a" ng-init="renovation_fenetre = store.isProduct('renovation_fenetre').items">
+			<form class="embedded">
+			
+				<h1>Chassis & vitrage</h1>
+					<div ng-repeat="item in renovation_fenetre track by $index">
+						<h3>Fenêtre {{$index+1}}</h3>
+						<div ng-class="{validbgd:item.check}" class="itemsBars">
+						<table width="100%">
+							<tr>
+								<td width="40%" align="center"><img src="img/solutions/renovation_fenetre.png"  style="width:80%; height:250px; border-radius:10px; width:50%; max-width:150px;"></td>
+								<td width="60%">
+									Modèle : 
+									<select ng-model="item.window" ng-change="store.checkItem('renovation_fenetre')">
+										<option ng-repeat="type in store.catalog.window">{{type.name}}</option>
+									</select>
+									Largeur [mm] : 
+									<select ng-model="item.width" ng-change="store.checkItem('renovation_fenetre');">
+										<option ng-repeat="width in store.catalog_by_name.window[item.window].widths">{{width}}</option>
+									</select>
+									Hauteur [mm] : 
+									<select ng-model="item.height" ng-change="store.checkItem('renovation_fenetre')">
+										<option ng-repeat="height in store.catalog_by_name.window[item.window].heights">{{height}}</option>
+									</select>
+									Volet disponible : 
+									<select ng-model="item.volet" ng-change="store.checkItem('renovation_fenetre')">
+										<option></option>
+										<option ng-repeat="i in item.volets_disp">{{i.name}}</option>
+									</select>
+									Room : 
+									<select ng-model="item.room" ng-change="store.checkItem('renovation_fenetre')">
+										<option ng-repeat="room in store.rooms">{{room}}</option>
+									</select>
+									Etage : 
+									<select ng-model="item.floor" ng-change="store.checkItem('renovation_fenetre')">
+										<option ng-repeat="floor in [0,1,2,3,4]">{{floor}}</option>
+									</select>
+									Actions : 
+									<button data-icon="delete" ng-click="store.deleteItem('renovation_fenetre', $index);">Supprimer</button>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</div>
+				<button ng-click="store.addItem(renovation_fenetre);">Ajouter un objet</button>
+				<!--STEP-->
+				<fieldset class="ui-grid-a">
+					<div class="ui-block-a"><a ng-click="store.previousHref('popup_fenetre')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+					<div class="ui-block-b"><a ng-click="store.nextHref('popup_fenetre'); store.updateCart();" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a></div>
+				</fieldset>
+			</form>
+		</div>
+		<!-- VOLET -->
+		<div data-role="page" id="popup_volet" data-theme="a" ng-init="volets = store.isProduct('volets').items">
+			<form class="embedded">
+			
+				<h1>Volets pour fenêtres existantes</h1>
+				<div ng-repeat="item in volets track by $index"  ng-if="!item.exist">
+					<h3>Volet {{$index+1}}</h3>
+					<div ng-class="{validbgd:item.check}" class="itemsBars">
+					<table width="100%">
+						<tr>
+							<td width="40%" align="center"><img src="img/solutions/volet_roulant.png"  style="width:80%; height:250px; border-radius:10px; width:50%; max-width:150px;"></td>
+							<td width="60%">
+								Modèle : 
+								<select ng-model="item.volet" ng-change="store.checkItem('volets')">
+									<option ng-repeat="type in store.catalog.volet">{{type.name}}</option>
+								</select>
+								Hauteur :
+								<select ng-model="item.height" ng-change="store.checkItem('volets')">
+									<option ng-repeat="height in store.catalog_by_name.volet[item.volet].heights">{{height}}</option>
+								</select>
+								Largeur :
+								<select ng-model="item.width" ng-change="store.checkItem('volets')">
+									<option ng-repeat="width in store.catalog_by_name.volet[item.volet].widths">{{width}}</option>
+								</select>
+								Room : 
+								<select ng-model="item.room" ng-change="store.checkItem('volets')">
+									<option ng-repeat="room in store.rooms">{{room}}</option>
+								</select>
+								Etage : 
+								<select ng-model="item.floor" ng-change="store.checkItem('volets')">
+									<option ng-repeat="floor in [0,1,2,3,4]">{{floor}}</option>
+								</select>
+								Actions : 
+								<button data-icon="delete" ng-click="store.deleteItem('volets', $index);">Supprimer</button>
+							</td>
+						</tr>
+					</table>
+					
+					</div>
+				</div>
+				<button ng-click="store.addItem(volets);">Ajouter un objet</button>
+				<!--STEP-->
+				<fieldset class="ui-grid-a">
+					<div class="ui-block-a"><a ng-click="store.previousHref('popup_volet')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+					<div class="ui-block-b"><a ng-click="store.nextHref('popup_volet'); store.updateCart();" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a></div>
+				</fieldset>
+			</form>
+		</div>
+		<!-- TOITURES -->
+		<div data-role="page" id="popup_toiture" ng-keyup="store.save()" ng-init="renovation_toiture = store.isProduct('renovation_toiture').items">
+			<div class="embedded">
+				<h1>Toitures</h1>
+					<div ng-repeat="item in renovation_toiture track by $index">
+						<h3>Toiture {{$index+1}}</h3>
+						<div ng-class="{validbgd:item.check}" class="itemsBars">
+							<table width="100%">
+								<tr>
+									<td width="40%" align="center"><img src="img/solutions/renovation_toiture.png" style="width:80%; height:250px; border-radius:10px; width:50%; max-width:150px;"></td>
+									<td width="60%">
+										Largeur [m] : 
+										<input ng-model="item.width" ng-change="store.checkItem('renovation_toiture')" maxlength="4" type="text">
+										Longueur [m] : 
+										<input ng-model="item.length" ng-change="store.checkItem('renovation_toiture')" maxlength="4" type="text">
+										Actions : 
+										<button data-icon="delete" ng-click="store.deleteItem('renovation_toiture', $index);">Supprimer</button>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+
+				<button ng-click="store.addItem(renovation_toiture);">Ajouter un objet</button>
+				<!--STEP-->
+				<fieldset class="ui-grid-a">
+					<div class="ui-block-a"><a ng-click="store.previousHref('popup_toiture')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+					<div class="ui-block-b"><a ng-click="store.nextHref('popup_toiture'); store.updateCart();" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a></div>
+				</fieldset>
+			</div>
+		</div>
+		<!-- COMBLES -->
+		<div data-role="page" id="popup_comble" ng-keyup="store.save()" ng-init="iso_comble = store.isProduct('iso_comble').items">
+			<div class="embedded">
+
+				<h1>Combles</h1>
+				<div ng-repeat="item in iso_comble track by $index">
+					<h3>Comble {{$index+1}}</h3>
+					<div ng-class="{validbgd:item.check}" class="itemsBars">
+					<table style="width:100%">
+						<tr>
+							<td width="50%">
+								<label><input ng-click="store.checkItem('comble')" type="radio" name="choice-{{$index}}" ng-model="item.type" value="1"><img style="width:100%;" src="img/plancher.png"></label>
+							</td>
+							<td width="50%">
+								<label><input ng-click="store.checkItem('comble')"  type="radio" name="choice-{{$index}}" ng-model="item.type" value="2"><img style="width:100%;" src="img/rampants.png"></label>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="2">
+								Largeur [m] : 
+								<input ng-model="item.width" ng-change="store.checkItem('iso_comble')" maxlength="4" type="text">
+								Longueur [m] : 
+								<input ng-model="item.length" ng-change="store.checkItem('iso_comble')" maxlength="4" type="text">
+								Actions : 
+								<button data-icon="delete" ng-click="store.deleteItem('iso_comble', $index);">Supprimer</button>
+							</td>
+						</tr>
+					</table>
+					</div>
+				</div>
+				<button ng-click="store.addItem(iso_comble);">Ajouter un objet</button>
+				<!--STEP-->
+				<fieldset class="ui-grid-a">
+					<div class="ui-block-a"><a ng-click="store.previousHref('popup_comble')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+					<div class="ui-block-b"><a ng-click="store.nextHref('popup_comble'); store.updateCart();" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a></div>
+				</fieldset>
+			</div>
+		</div>
+     <!-- PORTE -->
+     <div data-role="page" id="popup_porte" ng-keyup="store.save()" ng-init="porte_entree = store.isProduct('porte_entree').items">
+			<div class="embedded">
+					<h1>Porte extérieure</h1>
+					<div ng-repeat="item in porte_entree track by $index">
+					<h3>Porte {{$index+1}}</h3>
+						<div ng-class="{validbgd:item.check}" class="itemsBars">
+							<table width="100%">
+								<tr>
+									<td width="40%" align="center">
+										<img src="img/solutions/porte_entree.png" style="width:80%; height:250px; border-radius:10px; width:50%; max-width:150px;">
+									</td>
+									<td width="60%">
+										Imposte : 
+										<select ng-model="item.imposte" ng-change="store.checkItem('porte_entree')">
+											<option ng-repeat="val in ['oui', 'non']">{{val}}</option>
+										</select>
+										Tierce : 
+										<select ng-model="item.tierce" ng-change="store.checkItem('porte_entree')">
+											<option ng-repeat="val in ['oui', 'non']">{{val}}</option>
+										</select>
+										Room : 
+										<select ng-model="item.room" ng-change="store.checkItem('porte_entree')">
+											<option ng-repeat="room in store.rooms">{{room}}</option>
+										</select>
+										Etage : 
+										<select ng-model="item.floor" ng-change="store.checkItem('porte_entree')">
+											<option ng-repeat="floor in [0,1,2,3,4]">{{floor}}</option>
+										</select>
+										Actions : 
+										<button data-icon="delete" ng-click="store.deleteItem('porte_entree', $index);">Supprimer</button>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+
+				<button ng-click="store.addItem(porte_entree);">Ajouter un objet</button>
+				<!--STEP-->
+				<fieldset class="ui-grid-a">
+					<div class="ui-block-a"><a ng-click="store.previousHref('popup_porte')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+					<div class="ui-block-b"><a ng-click="store.nextHref('popup_porte'); store.updateCart();" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a></div>
+				</fieldset>
+			</div>
+		</div>
+
+        <!-- MUR EXTERIEUR -->
+        <div data-role="page" id="popup_mur_ext" ng-keyup="store.save()" ng-init="iso_mur_ext = store.isProduct('iso_mur_ext').items">
+			<div class="embedded">
+				<h1>Isolation par l'extérieur</h1>
+				<div ng-repeat="item in iso_mur_ext track by $index">
+					<h3>Mur {{$index+1}}</h3>
+					<div ng-class="{validbgd:item.check}" class="itemsBars">
+
+					<table width="100%">
+						<tr>
+							<td width="40%" align="center">
+								<img src="img/solutions/isolation_exterieur.png" style="width:80%; height:250px; border-radius:10px; width:50%; max-width:150px;">
+							</td>
+							<td width="60%">
+								Largeur [m] : 
+								<input ng-model="item.width" ng-change="store.checkItem('iso_mur_ext)" maxlength="4" type="text">
+								Hauteur [m] : 
+								<input ng-model="item.height" ng-change="store.checkItem('iso_mur_ext')" maxlength="4" type="text">
+								Option : 
+								<select ng-model="item.option" ng-change="store.checkItem('iso_mur_ext')">
+									<option ng-repeat="opt in ['enduit', 'bardage']">{{opt}}</option>
+								</select>
+								Room : 
+								<select ng-model="item.room" ng-change="store.checkItem('iso_mur_ext')">
+									<option ng-repeat="room in store.rooms">{{room}}</option>
+								</select>
+								Etage : 
+								<select ng-model="item.floor" ng-change="store.checkItem('iso_mur_ext')">
+									<option ng-repeat="floor in [0,1,2,3,4]">{{floor}}</option>
+								</select>
+								Actions : 
+								<button data-icon="delete" ng-click="store.deleteItem('iso_mur_ext', $index);">Supprimer</button>
+							</td>
+						</tr>
+					</table>
+					
+					</div>
+				</div>
+				<button ng-click="store.addItem(iso_mur_ext);">Ajouter un objet</button>
+			
+				<!--STEP-->
+				<fieldset class="ui-grid-a">
+					<div class="ui-block-a"><a ng-click="store.previousHref('popup_mur_ext')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+					<div class="ui-block-b"><a ng-click="store.nextHref('popup_mur_ext'); store.updateCart();" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a></div>
+				</fieldset>
+
+			</div>
+		</div>
+
+		<!-- MUR INTERIEUR -->
+        <div data-role="page" id="popup_mur_int" ng-keyup="store.save()" ng-init="iso_mur_int = store.isProduct('iso_mur_int').items">
+			<div class="embedded">
+				<h1>Isolation par l'intérieur</h1>
+				<div ng-repeat="item in iso_mur_int track by $index">
+					<h3>Mur {{$index+1}} {{item.index}}</h3>
+					<div ng-class="{validbgd:item.check}" class="itemsBars">
+
+						<table width="100%">
+							<tr>
+								<td width="40%" align="center">
+									<img src="img/solutions/isolation_interieur.png" style="width:80%; height:250px; border-radius:10px; width:50%; max-width:150px;">
+								</td>
+								<td width="60%">
+									Largeur [m] : 
+									<input ng-model="item.width" ng-change="store.checkItem('iso_mur_int')" maxlength="4" type="text">
+									Hauteur [m] : 
+									<input ng-model="item.height" ng-change="store.checkItem('iso_mur_int')" maxlength="4" type="text">
+									Room : 
+									<select ng-model="item.room" ng-change="store.checkItem('iso_mur_int')">
+										<option ng-repeat="room in store.rooms">{{room}}</option>
+									</select>
+									Etage : 
+									<select ng-model="item.floor" ng-change="store.checkItem('iso_mur_int')">
+										<option ng-repeat="floor in [0,1,2,3,4]">{{floor}}</option>
+									</select>
+									Actions : 
+									<button data-icon="delete" ng-click="store.deleteItem('iso_mur_int', $index);">Supprimer</button>
+								</td>
+							</tr>
+						</table>
+					
+					</div>
+				</div>
+				<button ng-click="store.addItem(iso_mur_int);">Ajouter un objet</button>
+				<!--STEP-->
+				<fieldset class="ui-grid-a">
+					<div class="ui-block-a"><a ng-click="store.previousHref('popup_mur_int')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>
+					<div class="ui-block-b"><a ng-click="store.nextHref('popup_mur_int'); store.updateCart();" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a></div>
+				</fieldset>
+			</div>
+		</div>
+		<!-- SOL -->
+<!--		<div data-role="page" id="popup_sol" ng-keyup="store.save()" ng-init="iso_sous_sol = store.isProduct('iso_sous_sol').items">-->
+<!--			<div class="embedded">-->
+<!--				<h1>Sol</h1>-->
+<!--				<div ng-repeat="item in iso_sous_sol track by $index">-->
+<!--					<h3>Sol {{$index+1}}</h3>-->
+<!--					<div ng-class="{validbgd:item.check}" class="itemsBars">-->
+<!--						<table width="100%">-->
+<!--							<tr>-->
+<!--								<td width="40%" align="center">-->
+<!--									<img src="img/solutions/isolation_sous_sol.png" style="width:80%; height:250px; border-radius:10px; width:50%; max-width:150px;">-->
+<!--								</td>-->
+<!--								<td width="60%">-->
+<!--									Largeur [cm] : -->
+<!--									<input ng-model="item.width" ng-change="store.checkItem('iso_sous_sol')" maxlength="4" type="text">-->
+<!--									Longueur [cm] : -->
+<!--									<input ng-model="item.length" ng-change="store.checkItem('iso_sous_sol')" maxlength="4" type="text">-->
+<!--									Room : -->
+<!--									<select ng-model="item.room" ng-change="store.checkItem('iso_sous_sol')">-->
+<!--										<option ng-repeat="room in store.rooms">{{room}}</option>-->
+<!--									</select>-->
+<!--									Etage : -->
+<!--									<select ng-model="item.floor" ng-change="store.checkItem('iso_sous_sol')">-->
+<!--										<option ng-repeat="floor in [0,1,2,3,4]">{{floor}}</option>-->
+<!--									</select>-->
+<!--									Actions : -->
+<!--									<button data-icon="delete" ng-click="store.deleteItem(iso_sous_sol, $index);">Supprimer</button>-->
+<!--								</td>-->
+<!--							</tr>-->
+<!--						</table>-->
+<!--					</div>-->
+<!--				</div>-->
+<!--				<button ng-click="store.addItem(iso_sous_sol);">Ajouter un objet</button>-->
+<!--				<!--STEP-->
+<!--				<fieldset class="ui-grid-a">-->
+<!--					<div class="ui-block-a"><a ng-click="store.previousHref('popup_sol')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all">Retour</a></div>-->
+<!--					<div class="ui-block-b"><a ng-click="store.nextHref('popup_sol'); store.updateCart();" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a></div>-->
+<!--				</fieldset>-->
+<!--			</div>-->
+<!--		</div>-->
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{    INVESTISSEMENT    }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+
+		<div data-role="page" id="investment" ng-init="investment = store.data.investment">
+			<section class="embedded">
+				<h1>Solutions choisies</h1>
+				<ul style="padding:0;">
+
+					<li ng-repeat="id in store.data.preference" ng-class="{itemsGrid : store.data.showItems=='grid', itemsBars : store.data.showItems=='bars'}"> 
+<!--						<h4 style="margin:0;">{{store.data.products[id].label}}</h4>-->
+						<img class="image" ng-src="img/solutions/{{store.data.products[id].img}}.png">
+						<div class="infos">
+							<label style="background:#FF9; border-radius:5px; padding:5px; text-align:center;">Prix : {{store.data.products[id].price.total | price:0}} €
+							<div ng-if="store.data.products[id].surface">Surface : {{store.data.products[id].surface | rounded:0}} m²</div>
+							<div ng-if="store.data.products[id].number">Nombre : {{store.data.products[id].number | rounded:0}} </div></label>
+							<label><input type="checkbox" ng-change="store.updateCart()" ng-model="store.data.products[id].confirm"/>Confirmer</label>
+						</div>
+					</li>
+
+				</ul>
+				<h1>Investissement</h1>
+				<table id="viewlist">
+					<thead>
+						<td width="25%" align="center"></td>
+						<td width="25%" align="center" style="border-right:1px solid #000;"><h3>Système actuel</h3></td>
+						<td width="25%" align="center"><h3>Système futur</h3></td>
+						<td width="25%" align="center"></td>
+					</thead>
+					<tr style="height:50px;">
+						<td align="right">sur 10 ans</td>
+						<td align="center" style="border-right:1px solid #000;"><span class="number" style="background:#9CF;">{{store.data.decennial.current_solution | price:0}} €</span></td>
+						<td align="center"><span class="number" style="background:#FCC;">{{store.data.decennial.future_solution_confirm | price:0}} €</span></td>
+						<td align="left">sur 10 ans</td>
+					</tr>
+					<tr style="height:50px;">
+						<td align="right"></td>
+						<td align="center" style="border-right:1px solid #000;"></span></td>
+						<td align="center"><span class="number" style="background:#CCC;">+ {{store.data.investment.price | price:0}} €</span></td>
+						<td align="left">Cout d'acquisition du matériel</td>
+					</tr>
+					<tr style="height:50px;">
+						<td align="right"></td>
+						<td align="center" style="border-right:1px solid #000;"></span></td>
+						<td align="center"><span class="number" style="background:#9fdf9f;">- {{store.data.investment.deduction | price:0}} €</span></td>
+						<td align="left">Aide de l'état</td>
+					</tr>
+					<tr style="height:50px;">
+						<td align="right"></td>
+						<td align="center" style="border-right:1px solid #000;"></span></td>
+						<td align="center"><span class="number" style="background:#e5ccff;">- {{store.data.annual.earnings_confirm * 0.6 | price:0}} €</span></td>
+						<td align="left">Economie repport 6 mois</td>
+					</tr>
+					<tr style="height:50px;">
+						<td align="right"></td>
+						<td align="center" style="border-right:1px solid #000;"><span class="number" style="background:#e5ccff;">{{store.data.decennial.current_solution | price:0}} €</span></span></td>
+						<td align="center"><span class="number" style="background:#FF6;">{{store.data.decennial.future_solution_confirm + store.data.investment.total | price:0}} €</span></td>
+						<td align="left">Total</td>
+					</tr>
+				</table>
+				<table id="viewlist">
+					<tr style="height:50px;">
+						<td width="44%" align="right"><a href="#explicatif_confirm" data-transition="slideup"><img src="img/cochon.png" style="width:100px;"></a></td>
+						<td width="56%" align="left"><span style="background:#F9D;" class="number">{{store.data.decennial.current_solution - store.data.decennial.future_solution_confirm - store.data.investment.total | price:0}} €</span></td>
+					</tr>
+				</table>
+			
+				<h1>Calcul mensualité</h1>
+				<table width="100%">
+					<tr>
+						<td width="50%">Durée du crédit : </td>
+						<td align="right" width="30%"><input type="number" ng-change="store.updateCart()" ng-model="store.data.investment.time" placeholder="nombre de mois"  maxlength="8" type="text"></td>
+						<td width="20%">mois</td>
+					</tr>
+					<tr>
+						<td>Mensualité <a href="http://www.financo.fr/credit/financement/credit-en-ligne-financo" target="_blank"><img src="img/financo.png" style="height:20px;"></a> : </td>
+						<td align="right"><input type="number" style="background:#FF9;" ng-change="store.updateCart()" ng-model="store.data.investment.domofinance"  maxlength="8" type="text"></td>
+						<td>€</td>
+					</tr>
+					<tr>
+						<td>Mensualité <a href="http://www.financo.fr/credit/financement/credit-en-ligne-financo" target="_blank"><img src="img/financo.png" style="height:20px;"></a> après réinjection : </td>
+						<td align="right"><input type="number" style="background:#b3ffcc;" ng-change="store.updateCart()" ng-model="store.data.investment.domofinance2"  maxlength="8" type="text"></td>
+						<td>€</td>
+					</tr>
+				</table>
+
+
+<br><br><br><br>
+<!--				Amortissement mensuel du matériel : {{ investment.amortissement | price:0}} €<br>-->
+<!--				Economies mensuelles : {{ investment.economie | price:0}} €<br>-->
+<!--				Investissement : {{ investment.amortissement - investment.economie | price:0 }}€<br>-->
+<!--				Remise à faire : {{ (investment.amortissement - investment.economie)*120 | price:0 }}€<br>-->
+				<fieldset class="ui-grid-a">
+					<div class="ui-block-a"><a ng-click="store.previousHref('investment')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all ui-btn-b">Retour</a></div>
+					<div class="ui-block-b">
+						<a ng-click="store.nextHref('investment')" class="ui-btn ui-icon-arrow-r ui-btn-icon-right ui-corner-all">Continuer</a>
+					</div>
+				</fieldset>
+			<section>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ Recap mensu  }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="synthese">
+			<section class="embedded">
+				<h1>Economies sur l'énergie les 10 prochaines années</h1>
+				<table id="viewlist">
+					<thead>
+						<td width="25%" align="center"></td>
+						<td width="25%" align="center" style="border-right:1px solid #000;"><h3>Système actuel</h3></td>
+						<td width="25%" align="center"><h3>Système futur</h3></td>
+						<td width="25%" align="center"></td>
+					</thead>
+					<tr style="height:50px;">
+						<td align="right">sur 10 ans</td>
+						<td align="center" style="border-right:1px solid #000;"><span class="number" style="background:#9CF;">{{store.data.decennial.current_solution | price:0}} €</span></td>
+						<td align="center"><span class="number" style="background:#FCC;">{{store.data.decennial.future_solution_confirm | price:0}} €</span></td>
+						<td align="left">sur 10 ans</td>
+					</tr>
+					<tr style="height:50px;">
+						<td align="right"></td>
+						<td align="center" style="border-right:1px solid #000;"></span></td>
+						<td align="center"><span class="number" style="background:#CCC;">+ {{store.data.investment.price | price:0}} €</span></td>
+						<td align="left">Cout d'acquisition du matériel</td>
+					</tr>
+					<tr style="height:50px;">
+						<td align="right"></td>
+						<td align="center" style="border-right:1px solid #000;"></span></td>
+						<td align="center"><span class="number" style="background:#9fdf9f;">- {{store.data.investment.deduction | price:0}} €</span></td>
+						<td align="left">Aide de l'état</td>
+					</tr>
+					<tr style="height:50px;">
+						<td align="right"></td>
+						<td align="center" style="border-right:1px solid #000;"></span></td>
+						<td align="center"><span class="number" style="background:#e5ccff;">- {{store.data.annual.earnings_confirm * 0.6 | price:0}} €</span></td>
+						<td align="left">Economie repport 6 mois</td>
+					</tr>
+					<tr style="height:50px;">
+						<td align="right"></td>
+						<td align="center" style="border-right:1px solid #000;"><span class="number" style="background:#e5ccff;">{{store.data.decennial.current_solution | price:0}} €</span></span></td>
+						<td align="center"><span class="number" style="background:#FF6;">{{store.data.decennial.future_solution_confirm + store.data.investment.total | price:0}} €</span></td>
+						<td align="left">Total</td>
+					</tr>
+				</table>
+				<table id="viewlist">
+					<tr style="height:50px;">
+						<td width="44%" align="right"><a href="#explicatif_confirm" data-transition="slideup"><img src="img/cochon.png" style="width:100px;"></a></td>
+						<td width="56%" align="left"><span style="background:#F9D;" class="number">{{store.data.decennial.current_solution - store.data.decennial.future_solution_confirm - store.data.investment.total | price:0}} €</span></td>
+					</tr>
+				</table>
+				<h1> Investissement </h1>
+				<table id="viewlist">
+					<tr style="height:50px;">
+						<td width="25%"></td>
+						<td align="center" width="25%"><b>Système actuel</b></td>
+						<td colspan="2" align="center"><b>Nouvelle solution</b></td>
+					</tr>
+					<tr style="height:50px;">
+						<td width="25%"></td>
+						<td align="center" width="25%"></td>
+						<td align="center" width="25%">Sans réinjection</td>
+						<td align="center" width="25%">Avec réinjection</td>
+					</tr>
+					<tr style="height:50px;">
+						<td>Facture d'énergie mensuelle</td>
+						<td align="center"><span class="number" style="background:#9CF;">{{ annual.current_solution / 10 | price:0 }} €</span></td>
+						<td align="center"><span class="number" style="background:#FCC;">{{ annual.future_solution_confirm / 10 | price:0 }} €</span></td>
+						<td align="center"><span class="number" style="background:#FCC;">{{ annual.future_solution_confirm / 10 | price:0 }} €</span></td>
+					</tr>
+					<tr style="height:50px;">
+						<td>Amortissement du matériel mensuel</td>
+						<td></td>
+						<td align="center"><span class="number" style="background:#FCC;">{{ investment.domofinance | price:0 }} €</span></td>
+						<td align="center"><span class="number" style="background:#FCC;">{{ investment.domofinance2 | price:0 }} €</span></td>
+					</tr>
+					<tr style="height:50px;">
+						<td>Total mensuel</td>
+						<td align="center"><span class="number" style="background:#e5ccff;">{{ annual.current_solution / 10 | price:0 }} €</span></td>
+						<td align="center"><span class="number" style="background:#e5ccff;">{{ annual.future_solution_confirm / 10 + investment.domofinance | price:0 }} €</span></td>
+						<td align="center"><span class="number" style="background:#e5ccff;">{{ annual.future_solution_confirm / 10 + investment.domofinance2 | price:0 }} €</span></td>
+					</tr>
+					<tr style="height:50px;">
+						<td>Investissement mensuel</td>
+						<td></td>
+						<td align="center"><span class="number" style="background:#FF6;">{{ (annual.future_solution_confirm - annual.current_solution) / 10 + investment.domofinance | price:0}} €</span></td>
+						<td align="center"><span class="number" style="background:#FF6;">{{ (annual.future_solution_confirm - annual.current_solution) / 10 + investment.domofinance2 | price:0}} €</span></td>
+					</tr>
+				</table>
+				<hr>
+				<table id="viewlist">
+					<tr>
+						<td>Année</td>
+						<td width="10%" ng-repeat="val in [1,2,3,4,5,6,7,8,9,10]" align="center"><b>{{val}}</b></td>
+					</tr>
+					<tr>
+						<td>Système actuel</td>
+						<td width="10%" ng-repeat="val in store.makeTabCumulus(store.coefInvestissement[store.data.energy.label],10)" align="center">{{annual.current_solution/10 * val | price:0}}</td>
+					</tr>
+					<tr>
+						<td>Système futur</td>
+						<td width="10%" ng-repeat="val in store.makeTabCumulus(store.coefInvestissement[store.data.energy.label],10)" align="center">{{annual.future_solution_confirm / 10 * val + investment.domofinance2 | price:0}}</td>
+					</tr>
+					<tr>
+						<td>Investissement</td>
+						<td width="10%" ng-repeat="val in store.makeTabCumulus(store.coefInvestissement[store.data.energy.label],10)" align="center">{{annual.future_solution_confirm / 10 * val + investment.domofinance2 - annual.current_solution/10 * val | price:0}}</td>
+					</tr>
+				</table>
+				<hr>
+			</section>
+			<div id="container" style="width:90%; margin: 0 auto; max-width:1000px;"></div>
+			<section class="embedded">
+				<fieldset class="ui-grid-a">
+					<div class="ui-block-a"><a ng-click="store.previousHref('synthese')" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all ui-btn-b">Retour</a></div>
+				</fieldset>
+			</section>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ EXPLICATIF GAINS  }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="explicatif_checked" ng-init="annual = store.data.annual">
+			<section class="embedded">
+				<h1>Détail facture</h1>
+					<h2>Consommation actuelle annuelle : {{annual.total + annual.co2 | price:0}} €</h2>
+					Consommation eau chaude : <b>{{annual.hotwater | price:0}} € </b>[{{ (annual.hotwater/annual.total)*100 | rounded:2}}%]<br>
+					Consommation chauffage : <b>{{annual.heater | price:0}} € </b> [{{ (annual.heater/annual.total)*100 | rounded:2}}%]<br>
+					Autre consommation : <b>{{annual.consommation | price:0}} € </b> [{{ (annual.consommation/annual.total)*100 | rounded:2}}%]<br>
+					Taxe Carbone = {{annual.co2 | price:0}} €
+					<hr>
+					<h2>Gains annuels : {{annual.earnings_checked + annual.reduction_co2 | price:0}} €</h2>
+					Coefficient de réduction pour l'eau chaude : <b>{{(1-annual.reduction_hotwater_checked)*100 | rounded:0}}%</b>*</br>
+					Gains sur l'eau chaude : {{annual.hotwater * (1-annual.reduction_hotwater_checked) | price}} €</br>
+					Coefficient de réduction pour le chauffage : <b>{{(1-annual.reduction_heater_checked)*100 | rounded:0}}%</b>*</br>
+					Gains sur le chauffage : {{annual.heater * (1-annual.reduction_heater_checked) | price}} €</br>
+					Gain sur la Taxe Carbonne : {{annual.reduction_co2 | price}} € </br>
+					Gains sur l'énergie pour calculer le PEB : <b>{{ annual.reduction_peb_checked | rounded:0}}%</b>
+					<hr>
+					<h2>Consommation future annuel : {{annual.future_solution_checked | price:0}} €</h2>
+					* Au plus les coefficients de réduction sont élevés, au plus la nouvelle facture de consommation du client sera basse. Cela correspond a la diminution de la consommation en pourcent. On se base sur ces facteurs pour calculer la nouvelle classe énergétique. 
+					<h1>Classe énergétique</h1>
+					Gains de consommation sur l'eau chaude : {{(annual.reduction_hotwater_checked)*100 | rounded:0}}% de {{(annual.hotwater/annual.total)*100 | rounded:0}}% = 
+					{{(annual.reduction_hotwater_checked) * (annual.hotwater/annual.total)*100 | rounded:0}}% <br>
+
+					Gains de consommation sur le chauffage : {{(annual.reduction_heater_checked)*100 | rounded:0}}% de {{(annual.heater/annual.total)*100 | rounded:0}}% = 
+					{{(annual.reduction_heater_checked) * (annual.heater/annual.total)*100 | rounded:0}}% <br>
+
+					Aucun gains sur les autres consommation : {{ (annual.consommation/annual.total)*100 | rounded:2}}%<br>
+					Avec les produits sélectionnés, le client consommera <b>{{ (annual.consommation + annual.reduction_heater_checked * annual.heater + annual.reduction_hotwater_checked * annual.hotwater) / annual.total * 100 | rounded:0}}%</b> de sa consommation actuelle. 
+					<a href="index.html" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all ui-btn-b" ng-click="store.updateCart()" data-rel="back">Retour</a>
+			</section>
+		</div>
+
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ EXPLICATIF GAINS  }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+		<!-- {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}-->
+
+		<div data-role="page" id="explicatif_confirm" ng-init="annual = store.data.annual">
+			<section class="embedded">
+				<h1>Détail facture</h1>
+					<h2>Consommation actuelle annuelle : {{annual.total + annual.co2 | price:0}} € ({{store.data.decennial.current_solution | price:0}} €)</h2>
+					Consommation eau chaude : <b>{{annual.hotwater | price:0}} € </b>[{{ (annual.hotwater/annual.total)*100 | rounded:2}}%]<br>
+					Consommation chauffage : <b>{{annual.heater | price:0}} € </b> [{{ (annual.heater/annual.total)*100 | rounded:2}}%]<br>
+					Autre consommation : <b>{{annual.consommation | price:0}} € </b> [{{ (annual.consommation/annual.total)*100 | rounded:2}}%]<br>
+					Taxe Carbone = {{annual.co2 | price:0}} €
+					<hr>
+					<h2>Gains annuels : {{annual.earnings_confirm + annual.reduction_co2 | price:0}} € ({{store.data.decennial.current_solution - store.data.decennial.future_solution_confirm | price:0}} €)</h2>
+					Coefficient de réduction pour l'eau chaude : <b>{{(1-annual.reduction_hotwater_confirm)*100 | rounded:0}}%</b>*</br>
+					Gains sur l'eau chaude : {{annual.hotwater * (1-annual.reduction_hotwater_confirm) | price}} €</br>
+					Coefficient de réduction pour le chauffage : <b>{{(1-annual.reduction_heater_confirm)*100 | rounded:0}}%</b>*</br>
+					Gains sur le chauffage : {{annual.heater * (1-annual.reduction_heater_confirm) | price}} €</br>
+					Gain sur la Taxe Carbonne : {{annual.reduction_co2 | price}} €</br>
+					Gains sur l'énergie pour calculer le PEB : <b>{{ annual.reduction_peb_confirm | rounded:0}}%</b>
+					<hr>
+					<h2>Consommation future annuel : {{annual.future_solution_confirm | price:0}} € ({{store.data.decennial.future_solution_confirm | price:0}} €)</h2>
+					* Au plus les coefficients de réduction sont élevés, au plus la nouvelle facture de consommation du client sera basse. Cela correspond a la diminution de la consommation en pourcent. On se base sur ces facteurs pour calculer la nouvelle classe énergétique. 
+					<h1>Classe énergétique</h1>
+					Gains de consommation sur l'eau chaude : {{(annual.reduction_hotwater_confirm)*100 | rounded:0}}% de {{(annual.hotwater/annual.total)*100 | rounded:0}}% = 
+					{{(annual.reduction_hotwater_checked) * (annual.hotwater/annual.total)*100 | rounded:0}}% <br>
+
+					Gains de consommation sur le chauffage : {{(annual.reduction_heater_confirm)*100 | rounded:0}}% de {{(annual.heater/annual.total)*100 | rounded:0}}% = 
+					{{(annual.reduction_heater_checked) * (annual.heater/annual.total)*100 | rounded:0}}% <br>
+
+					Aucun gains sur les autres consommation : {{ (annual.consommation/annual.total)*100 | rounded:2}}%<br>
+					Avec les produits confirmés par le vendeur, le client consommera <b>{{ (annual.consommation + annual.reduction_heater_confirm * annual.heater + annual.reduction_hotwater_confirm * annual.hotwater) / annual.total * 100 | rounded:0}}%</b> de sa consommation actuelle. 
+					<a href="index.html" class="ui-btn ui-icon-arrow-l ui-btn-icon-left ui-corner-all ui-btn-b" ng-click="store.updateCart()" data-rel="back">Retour</a>
+			</section>
+		</div>
+
+    </body>
+</html>
